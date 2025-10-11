@@ -4,6 +4,16 @@
 Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabase, Zustand, and TanStack Query. The platform enables users to take quizzes on various subjects with WhatsApp/SMS OTP authentication and premium content access via Paystack payments.
 
 ## Recent Changes
+- **2025-10-11**: IQ Assessment System Implementation
+  - Added configurable IQ grading system with admin management interface
+  - Quiz submissions now calculate and display IQ scores based on percentage ranges
+  - Admin can create/edit/delete IQ grade ranges (global or subject-specific)
+  - Results page refactored with prominent IQ score display
+  - Question review converted to accordion UI for better UX
+  - Validation ensures logical min/max ranges for scores and IQ values
+  - Database schema: Added `iq_grades` table and `iqScore`/`iqLabel` to quiz_attempts
+  - Admin Settings: New "IQ Grades" tab for complete CRUD management
+
 - **2025-01-11**: Security Fix - Implemented proper session management
   - **CRITICAL**: Replaced client-controlled headers with httpOnly cookie-based sessions
   - User sessions now use server-issued tokens (28-day expiry for auto-login)
@@ -46,7 +56,8 @@ Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabas
 - **subjects**: Quiz categories with theme colors
 - **quizzes**: Quiz details and settings
 - **questions**: MCQ and True/False questions
-- **quiz_attempts**: User quiz submissions and scores
+- **quiz_attempts**: User quiz submissions, scores, and IQ assessments
+- **iq_grades**: Configurable IQ grade ranges (global or subject-specific)
 - **payments**: Premium membership transactions
 - **payment_settings**: Configurable pricing and Paystack settings
 
@@ -61,7 +72,8 @@ Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabas
 - Text-to-speech question reading
 - Mark questions for review
 - Instant feedback option (admin configurable)
-- Detailed results with question review
+- Detailed results with IQ score display and accordion question review
+- IQ assessment based on performance (configurable by admin)
 - User profile with quiz history and payment records
 - Payment modal for premium access
 
@@ -71,6 +83,7 @@ Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabas
 - Quiz creation with grading settings (pass mark, time limit, instant feedback, randomize)
 - Question editor supporting Multiple Choice and True/False types
 - Admin user management (super admin can create sub-admins)
+- IQ grade configuration (create ranges, set labels, global or subject-specific)
 - Payment settings configuration (price, Paystack split code)
 - Analytics dashboard (total attempts, pass rate, average score, revenue)
 

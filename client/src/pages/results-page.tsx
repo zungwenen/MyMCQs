@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle2, XCircle, Clock, Award, Home, RotateCcw } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Loader2, CheckCircle2, XCircle, Clock, Award, Home, RotateCcw, Brain } from "lucide-react";
 import type { QuizAttempt, Quiz, Subject, Question } from "@shared/schema";
 
 export default function ResultsPage() {
@@ -60,8 +61,8 @@ export default function ResultsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card data-testid="card-score">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Score</CardTitle>
             </CardHeader>
@@ -73,7 +74,31 @@ export default function ResultsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-testid="card-iq-grade" className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                IQ Grade
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {attempt.iqLabel ? (
+                <>
+                  <p className="text-3xl font-bold mb-1" data-testid="text-iq-label">{attempt.iqLabel}</p>
+                  <p className="text-sm text-muted-foreground" data-testid="text-iq-score">
+                    {attempt.iqScore}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xl text-muted-foreground mb-1" data-testid="text-not-graded">Not graded</p>
+                  <p className="text-xs text-muted-foreground">IQ assessment not configured for this quiz</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card data-testid="card-status">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Status</CardTitle>
             </CardHeader>
@@ -94,7 +119,7 @@ export default function ResultsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-testid="card-time">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">Time</CardTitle>
             </CardHeader>
@@ -112,57 +137,70 @@ export default function ResultsPage() {
             <CardTitle>Question Review</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <Accordion type="multiple" className="w-full" data-testid="accordion-question-review">
               {attempt.quiz.questions.map((question, index) => {
                 const userAnswer = answers[question.id];
                 const isCorrect = userAnswer === question.correctAnswer;
+                const truncatedQuestion = question.questionText.length > 80 
+                  ? question.questionText.substring(0, 80) + "..." 
+                  : question.questionText;
 
                 return (
-                  <div
-                    key={question.id}
-                    className={`p-4 rounded-lg border ${
-                      isCorrect ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5"
-                    }`}
+                  <AccordionItem 
+                    key={question.id} 
+                    value={String(question.id)}
+                    className={isCorrect ? "border-success/30" : "border-destructive/30"}
                     data-testid={`review-question-${index}`}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="shrink-0">
+                    <AccordionTrigger 
+                      className={`hover:no-underline ${
+                        isCorrect ? "text-success hover:text-success" : "text-destructive hover:text-destructive"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 text-left pr-4">
                         {isCorrect ? (
-                          <CheckCircle2 className="h-5 w-5 text-success" />
+                          <CheckCircle2 className="h-5 w-5 shrink-0" />
                         ) : (
-                          <XCircle className="h-5 w-5 text-destructive" />
+                          <XCircle className="h-5 w-5 shrink-0" />
                         )}
+                        <span className="font-medium">
+                          Q{index + 1}: <span className="text-foreground">{truncatedQuestion}</span>
+                        </span>
                       </div>
-                      <div className="flex-1 space-y-2">
-                        <p className="font-medium">
-                          {index + 1}. {question.questionText}
-                        </p>
-                        <div className="text-sm space-y-1">
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-3 pl-8 pr-4">
+                        <div>
+                          <p className="font-medium text-foreground mb-2">{question.questionText}</p>
+                        </div>
+                        <div className="text-sm space-y-2">
                           <p>
                             <span className="text-muted-foreground">Your answer: </span>
-                            <span className={isCorrect ? "text-success" : "text-destructive"}>
+                            <span className={`font-medium ${isCorrect ? "text-success" : "text-destructive"}`}>
                               {userAnswer || "Not answered"}
                             </span>
                           </p>
                           {!isCorrect && (
                             <p>
                               <span className="text-muted-foreground">Correct answer: </span>
-                              <span className="text-success">{question.correctAnswer}</span>
+                              <span className="font-medium text-success">{question.correctAnswer}</span>
                             </p>
                           )}
                         </div>
                         {question.explanation && (
-                          <p className="text-sm text-muted-foreground mt-2 p-3 bg-muted/50 rounded">
-                            <span className="font-medium">Explanation: </span>
-                            {question.explanation}
-                          </p>
+                          <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                            <p className="text-sm">
+                              <span className="font-medium text-foreground">Explanation: </span>
+                              <span className="text-muted-foreground">{question.explanation}</span>
+                            </p>
+                          </div>
                         )}
                       </div>
-                    </div>
-                  </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 );
               })}
-            </div>
+            </Accordion>
           </CardContent>
         </Card>
 

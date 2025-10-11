@@ -79,6 +79,8 @@ export const quizAttempts = pgTable("quiz_attempts", {
   score: integer("score"),
   totalQuestions: integer("total_questions").notNull(),
   passed: boolean("passed"),
+  iqScore: integer("iq_score"),
+  iqLabel: text("iq_label"),
   timeSpentSeconds: integer("time_spent_seconds"),
   startedAt: timestamp("started_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
@@ -103,6 +105,18 @@ export const paymentSettings = pgTable("payment_settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// IQ Grades - configurable IQ assessment ranges
+export const iqGrades = pgTable("iq_grades", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  subjectId: varchar("subject_id").references(() => subjects.id, { onDelete: "cascade" }), // null means global
+  minScorePercentage: integer("min_score_percentage").notNull(),
+  maxScorePercentage: integer("max_score_percentage").notNull(),
+  minIQ: integer("min_iq").notNull(),
+  maxIQ: integer("max_iq").notNull(),
+  label: text("label").notNull(), // e.g., "Genius", "Above Average", etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertAdminSchema = createInsertSchema(admins).omit({ id: true, createdAt: true });
@@ -113,6 +127,7 @@ export const insertQuestionSchema = createInsertSchema(questions).omit({ id: tru
 export const insertQuizAttemptSchema = createInsertSchema(quizAttempts).omit({ id: true, startedAt: true });
 export const insertPaymentSchema = createInsertSchema(payments).omit({ id: true, createdAt: true });
 export const insertPaymentSettingsSchema = createInsertSchema(paymentSettings).omit({ id: true, updatedAt: true });
+export const insertIqGradeSchema = createInsertSchema(iqGrades).omit({ id: true, createdAt: true });
 
 // TypeScript types
 export type User = typeof users.$inferSelect;
@@ -141,6 +156,9 @@ export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 
 export type PaymentSettings = typeof paymentSettings.$inferSelect;
 export type InsertPaymentSettings = z.infer<typeof insertPaymentSettingsSchema>;
+
+export type IqGrade = typeof iqGrades.$inferSelect;
+export type InsertIqGrade = z.infer<typeof insertIqGradeSchema>;
 
 // Relations
 export const subjectsRelations = relations(subjects, ({ many }) => ({
@@ -178,5 +196,12 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   user: one(users, {
     fields: [payments.userId],
     references: [users.id],
+  }),
+}));
+
+export const iqGradesRelations = relations(iqGrades, ({ one }) => ({
+  subject: one(subjects, {
+    fields: [iqGrades.subjectId],
+    references: [subjects.id],
   }),
 }));

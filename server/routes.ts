@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import { sendOTP, generateOTP } from "./services/twilio";
 import bcrypt from "bcrypt";
@@ -477,6 +477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         where: eq(schema.quizzes.id, quizId),
         with: {
           questions: true,
+          subject: true,
         },
       });
 
@@ -494,6 +495,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const percentage = (score / quiz.questions.length) * 100;
       const passed = percentage >= quiz.passMarkPercentage;
 
+      // Calculate IQ score
+      let iqScore = null;
+      let iqLabel = null;
+
+      // First try to get subject-specific IQ grades
+      let iqGrades = await db.query.iqGrades.findMany({
+        where: eq(schema.iqGrades.subjectId, quiz.subjectId),
+        orderBy: (grades, { asc }) => [asc(grades.minScorePercentage)],
+      });
+
+      // If no subject-specific grades, get global grades
+      if (iqGrades.length === 0) {
+        iqGrades = await db.query.iqGrades.findMany({
+          where: sql`${schema.iqGrades.subjectId} IS NULL`,
+          orderBy: (grades, { asc }) => [asc(grades.minScorePercentage)],
+        });
+      }
+
+      // Find matching IQ grade and calculate IQ score
+      if (iqGrades.length > 0) {
+        const matchingGrade = iqGrades.find(grade => 
+          percentage >= grade.minScorePercentage && percentage <= grade.maxScorePercentage
+        );
+
+        if (matchingGrade) {
+          // Calculate IQ within the range based on percentage within the score range
+          const scoreRange = matchingGrade.maxScorePercentage - matchingGrade.minScorePercentage;
+          const iqRange = matchingGrade.maxIQ - matchingGrade.minIQ;
+          const scorePositionInRange = percentage - matchingGrade.minScorePercentage;
+          const iqPositionInRange = (scorePositionInRange / scoreRange) * iqRange;
+          
+          iqScore = Math.round(matchingGrade.minIQ + iqPositionInRange);
+          iqLabel = matchingGrade.label;
+        }
+      }
+
       const [attempt] = await db.insert(schema.quizAttempts).values({
         userId,
         quizId,
@@ -502,6 +539,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         score,
         totalQuestions: quiz.questions.length,
         passed,
+        iqScore,
+        iqLabel,
         timeSpentSeconds,
         completedAt: new Date(),
       }).returning();
@@ -706,6 +745,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .returning();
       
       res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // ===== IQ GRADES ROUTES =====
+  
+  app.get("/api/admin/iq-grades", requireAdmin, async (req, res) => {
+    try {
+      const grades = await db.query.iqGrades.findMany({
+        with: {
+          subject: true,
+        },
+        orderBy: (grades, { asc }) => [asc(grades.minScorePercentage)],
+      });
+      res.json(grades);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/admin/iq-grades", requireAdmin, async (req, res) => {
+    try {
+      const validated = schema.insertIqGradeSchema.parse(req.body);
+      const [grade] = await db.insert(schema.iqGrades).values(validated).returning();
+      res.json(grade);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.patch("/api/admin/iq-grades/:id", requireAdmin, async (req, res) => {
+    try {
+      const validated = schema.insertIqGradeSchema.partial().parse(req.body);
+      const [updated] = await db.update(schema.iqGrades)
+        .set(validated)
+        .where(eq(schema.iqGrades.id, req.params.id))
+        .returning();
+      res.json(updated);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/admin/iq-grades/:id", requireAdmin, async (req, res) => {
+    try {
+      await db.delete(schema.iqGrades).where(eq(schema.iqGrades.id, req.params.id));
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/iq-grades/:subjectId?", async (req, res) => {
+    try {
+      const { subjectId } = req.params;
+      let grades;
+      
+      if (subjectId) {
+        // Get subject-specific grades first, then fall back to global
+        grades = await db.query.iqGrades.findMany({
+          where: eq(schema.iqGrades.subjectId, subjectId),
+          orderBy: (grades, { asc }) => [asc(grades.minScorePercentage)],
+        });
+        
+        // If no subject-specific grades, get global ones
+        if (grades.length === 0) {
+          grades = await db.query.iqGrades.findMany({
+            where: sql`${schema.iqGrades.subjectId} IS NULL`,
+            orderBy: (grades, { asc }) => [asc(grades.minScorePercentage)],
+          });
+        }
+      } else {
+        // Get only global grades
+        grades = await db.query.iqGrades.findMany({
+          where: sql`${schema.iqGrades.subjectId} IS NULL`,
+          orderBy: (grades, { asc }) => [asc(grades.minScorePercentage)],
+        });
+      }
+      
+      res.json(grades);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
