@@ -4,6 +4,14 @@
 Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabase, Zustand, and TanStack Query. The platform enables users to take quizzes on various subjects with WhatsApp/SMS OTP authentication and premium content access via Paystack payments.
 
 ## Recent Changes
+- **2025-10-11**: Admin Setup Page Implementation
+  - Added initial setup page at `/admin/setup` for production deployments
+  - Allows creating the first super admin without running seed scripts
+  - Automatically redirects to login page once setup is complete
+  - Login page displays setup link when no admins exist
+  - Security: Setup endpoint blocks access after first admin is created
+  - Validation: Username min 3 chars, password min 6 chars, password confirmation
+
 - **2025-10-11**: IQ Assessment System Implementation
   - Added configurable IQ grading system with admin management interface
   - Quiz submissions now calculate and display IQ scores based on percentage ranges
@@ -99,10 +107,14 @@ Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabas
 7. Session persisted in Zustand with localStorage
 
 ### Admin Auth
-- Separate login at `/admin/login`
+- **Initial Setup** (Production): Visit `/admin/setup` to create your first super admin
+  - Only accessible when no admins exist in database
+  - Automatically redirects to login once setup is complete
+  - Login page shows setup link when no admins are found
+- **Login**: `/admin/login`
 - Username/password authentication with bcrypt
-- Super admin: `username: admin, password: admin123`
-- Super admin can create additional admins
+- **Development**: Super admin seeded via scripts (`username: admin, password: admin123`)
+- Super admin can create additional admins via Settings page
 
 ## API Endpoints
 
@@ -113,6 +125,8 @@ Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabas
 - `PATCH /api/users/profile` - Update user name
 
 ### Admin Auth
+- `GET /api/admin/setup-needed` - Check if initial setup is required (no admins exist)
+- `POST /api/admin/setup` - Create first super admin (only works when no admins exist)
 - `POST /api/admin/login` - Admin authentication
 - `POST /api/admin/create-admin` - Create new admin (super admin only)
 - `GET /api/admin/admins` - List all admins
@@ -187,7 +201,9 @@ Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabas
 
 ## Development Commands
 - `npm run dev` - Start development server (frontend + backend)
-- `npx tsx server/seed-admin.ts` - Create super admin (when DATABASE_URL works)
+- `npx tsx server/seed-admin.ts` - Seed super admin in development
+- `npx tsx server/seed-production.ts` - Seed demo data in development
+- `npx tsx server/seed-iq-grades.ts` - Seed default IQ grade ranges
 
 ## Environment Variables
 - `DATABASE_URL` - Supabase PostgreSQL connection string
@@ -195,10 +211,18 @@ Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabas
 - `SESSION_SECRET` - Express session secret (auto-generated)
 - Twilio credentials managed via Replit connector
 
-## Super Admin Credentials
+## Super Admin Access
+
+### Production (First-Time Setup)
+1. Visit `/admin/setup` in your deployed app
+2. Create your super admin credentials (username min 3 chars, password min 6 chars)
+3. Login at `/admin/login` with your credentials
+
+### Development (Using Seed Scripts)
 - Username: `admin`
 - Password: `admin123`
 - Access at: `/admin/login`
+- Run `npx tsx server/seed-admin.ts` to create this account
 
 ## Project Structure
 ```
