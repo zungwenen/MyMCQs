@@ -20,6 +20,7 @@ import AdminSubjects from "@/pages/admin-subjects";
 import AdminQuizzes from "@/pages/admin-quizzes";
 import AdminQuestions from "@/pages/admin-questions";
 import AdminSettings from "@/pages/admin-settings";
+import PaymentCallback from "@/pages/payment-callback";
 
 import NotFound from "@/pages/not-found";
 
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/profile">
         {(params) => <ProtectedRoute component={ProfilePage} {...params} />}
       </Route>
+      <Route path="/payment-callback" component={PaymentCallback} />
 
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard">

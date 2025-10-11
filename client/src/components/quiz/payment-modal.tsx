@@ -14,7 +14,7 @@ interface PaymentModalProps {
 export function PaymentModal({ open, onOpenChange, onSuccess }: PaymentModalProps) {
   const { toast } = useToast();
 
-  const { data: settings } = useQuery({
+  const { data: settings } = useQuery<{ membershipPrice: number; paystackSplitCode: string | null }>({
     queryKey: ["/api/payment-settings"],
     enabled: open,
   });
