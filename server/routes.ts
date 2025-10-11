@@ -719,7 +719,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         res.json(data.data);
       } else {
-        res.status(400).json({ message: "Payment initialization failed" });
+        res.status(400).json({ message: data.message || "Payment initialization failed" });
       }
     } catch (error: any) {
       res.status(500).json({ message: error.message });
