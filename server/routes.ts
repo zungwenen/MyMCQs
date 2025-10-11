@@ -577,13 +577,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const reference = `PAY_${Date.now()}_${userId}`;
       
+      // Build callback URL from trusted environment variables using URL constructor
+      const isProduction = process.env.NODE_ENV === 'production';
+      const replitDomain = process.env.REPLIT_DEV_DOMAIN;
+      
+      let baseUrl: string;
+      if (replitDomain) {
+        // Handle both bare domain and full URL formats
+        baseUrl = replitDomain.startsWith('http') ? replitDomain : `https://${replitDomain}`;
+      } else {
+        baseUrl = isProduction ? 'https://localhost:5000' : 'http://localhost:5000';
+      }
+      
+      const url = new URL(baseUrl);
+      url.pathname = '/payment-callback';
+      const callbackUrl = url.toString();
+      
       // Initialize Paystack payment
       const paystackUrl = "https://api.paystack.co/transaction/initialize";
       const paystackData: any = {
         email: `${user?.phoneNumber}@easyreadiq.com`,
         amount: settings?.membershipPrice || 5000,
         reference,
-        callback_url: `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/payment-callback`,
+        callback_url: callbackUrl,
       };
 
       if (settings?.paystackSplitCode) {
