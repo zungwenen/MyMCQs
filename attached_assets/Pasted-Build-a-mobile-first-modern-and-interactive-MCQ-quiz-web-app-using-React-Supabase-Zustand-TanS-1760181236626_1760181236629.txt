@@ -1,0 +1,187 @@
+Build a mobile-first modern and interactive MCQ quiz web app using React + Supabase + Zustand + TanStack Query. The name of the app is Easyread IQ
+The app should be optimized for performance, state simplicity, and user engagement.
+It should include both user and admin interfaces, WhatsApp/SMS authentication via Twilio, and a flexible payment system for quiz access.
+
+⚙️ Architecture
+
+Frontend: React + TailwindCSS + Zustand (for UI & auth states)
+
+Data fetching & caching: TanStack Query
+
+Backend: Supabase (database, auth, and storage). Database URL will be provided
+
+Auth provider: Twilio (for OTP via WhatsApp with fallback to SMS. If a user is verified by OTP, enable them to login without OTP for 4 weeks before requiring OTP. On the OTP request/Signup, add a login option for verified users to login without OTP
+
+Payments: Supabase functions or Paystack (for one-time payment)
+
+
+👩‍🎓 User Features
+
+Onboarding & Authentication
+
+Register with a phone number only.
+
+System generates an OTP and sends via WhatsApp using Twilio.
+
+If WhatsApp delivery fails, automatically fallback to SMS OTP.
+
+Simple, clean UI for OTP input and verification.
+
+Store verified users in Supabase.
+
+
+Dashboard / Quiz List
+
+Display all available MCQ Subjects (e.g., Business Law, Corporate Governance, Taxation).
+
+Each subject card shows:
+
+Subject name
+
+Short description
+
+Tag (e.g., “Free” or “Premium”) by icon
+List all quizzes under it (Titles only)
+
+“Start Quiz” button
+
+When “Start Quiz” is clicked:
+
+If the quiz is Free, start immediately.
+
+If Premium, check Supabase for payment record.
+
+If unpaid, show a graceful banner or modal prompting user to pay (with Paystack button).
+
+If paid, proceed to quiz screen.
+
+Quiz Interface
+
+Each quiz will be housed under a Subject and will enherit the properties of the Subject.
+Display each question on its page (tightly fitted to the page, especially on mobile device) with a next button
+Fetch questions per subject from Supabase.
+
+Show progress bar, timer, and navigation between questions. (each Subject will have it color progress bar, configurable in the Subject editor)
+
+Option to mark question for review.
+
+Show instant feedback (correct/incorrect) if admin enables it.
+
+Submit answers → show results + grading breakdown (score, pass/fail, time spent).
+
+Voice-based question reading for accessibility. (Nicely place TTS capability)
+
+User Profile
+
+Display completed quizzes, scores, and payment history.
+
+Allow user to update phone number (re-verification required) and Name on register/login
+
+
+🧑‍💼 Admin Dashboard
+
+Authentication: Create a separate Super admin login flow different from the users.  .
+
+Manage MCQs
+
+Create, edit, delete questions.
+
+Assign each quiz to a subject.
+
+Set Subject status as Free or Paid. All paid Subjects will be unlocked with a membership
+
+Option to randomize question order.
+
+Grading Settings
+
+Configure pass marks, time limits, and scoring rules.
+
+Enable or disable “instant feedback” after each question.
+
+Payment Settings
+
+Paystack Split payment will be used. This is configurable by the admin. Insert Secret key and split code
+
+Manage pricing plans (all-access). Users will buy membership to access all premium content
+
+View transaction logs.
+
+Analytics
+
+See user attempts, average scores, and most-attempted quizzes.
+
+🔐 Auth Flow (Twilio + Supabase)
+
+Registration Flow:
+
+User enters phone number.
+
+Supabase backend calls a serverless function that triggers Twilio API:
+
+// send OTP via WhatsApp first
+client.messages.create({
+  from: 'whatsapp:+14155238886',
+  to: `whatsapp:${phone}`,
+  body: 'Your verification code is 123456',
+}).catch(() => {
+  // fallback to SMS if WhatsApp fails
+  client.messages.create({
+    from: '+1234567890',
+    to: phone,
+    body: 'Your verification code is 123456',
+  });
+});
+
+
+User inputs OTP → verified via Supabase function.
+
+On success, session stored and Zustand updates user state.
+
+Verification UI:
+
+Simple two-step modal:
+
+Step 1: Enter phone number → show “Sending via WhatsApp…”
+
+Step 2: Enter OTP → verify button.
+
+If OTP expires, allow “Resend via SMS”.
+
+💡 Extra Features
+
+Leaderboard (top scorers)
+
+Quiz retry history
+
+Motivational badges (e.g., “Fast Thinker”, “A+ Achiever”)
+
+Dark/light mode toggle
+
+Offline caching of last attempted quiz (for low-network users)
+
+Mobile-first responsive design
+
+Loading skeletons for better UX
+
+Error boundaries to prevent infinite loops
+
+🧠 Developer Notes
+
+Use React Suspense + TanStack Query for async states (avoid infinite loops).
+
+Zustand store handles UI, auth, and user session states.
+
+Supabase handles data & auth persistence.
+
+Modular file structure:
+
+src/
+ ├─ components/
+ ├─ pages/
+ ├─ hooks/
+ ├─ store/
+ ├─ utils/
+ ├─ services/ (Supabase + Twilio + Paystack)
+
+
+Use optimistic updates where possible for a snappy experience.
