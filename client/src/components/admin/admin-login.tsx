@@ -3,12 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield, Loader2 } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { Shield, Loader2, ArrowRight } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuthStore } from "@/store/auth";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -16,6 +17,11 @@ export function AdminLogin() {
   const { setAdmin } = useAuthStore();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+
+  // Check if setup is needed
+  const { data: setupCheck } = useQuery<{ needsSetup: boolean }>({
+    queryKey: ["/api/admin/setup-needed"],
+  });
 
   const loginMutation = useMutation({
     mutationFn: async (data: { username: string; password: string }) => {
@@ -56,7 +62,20 @@ export function AdminLogin() {
           <CardTitle className="text-2xl">Admin Portal</CardTitle>
           <CardDescription>Sign in to access the admin dashboard</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {setupCheck?.needsSetup && (
+            <Alert className="bg-primary/5 border-primary/20">
+              <AlertDescription className="flex items-center justify-between">
+                <span className="text-sm">No admin accounts found. Complete initial setup first.</span>
+                <Link href="/admin/setup">
+                  <Button variant="outline" size="sm" data-testid="link-setup">
+                    Setup <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
