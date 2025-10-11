@@ -11,16 +11,19 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-): Promise<Response> {
+): Promise<any> {
+  const headers: Record<string, string> = data ? { "Content-Type": "application/json" } : {};
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 
   await throwIfResNotOk(res);
-  return res;
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

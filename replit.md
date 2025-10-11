@@ -1,0 +1,241 @@
+# Easyread IQ - MCQ Quiz Platform
+
+## Overview
+Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabase, Zustand, and TanStack Query. The platform enables users to take quizzes on various subjects with WhatsApp/SMS OTP authentication and premium content access via Paystack payments.
+
+## Recent Changes
+- **2025-01-11**: Security Fix - Implemented proper session management
+  - **CRITICAL**: Replaced client-controlled headers with httpOnly cookie-based sessions
+  - User sessions now use server-issued tokens (28-day expiry for auto-login)
+  - Admin sessions use server-issued tokens (24-hour expiry)
+  - All protected routes now validate session tokens server-side
+  - Added `/api/auth/me` endpoint to check current session
+  - Added `/api/auth/logout` endpoint to clear session cookies
+  - Session middleware validates token age and user/admin existence
+  
+- **2025-01-11**: Initial implementation of complete quiz platform
+  - Schema-first development with all data models defined
+  - Full frontend implementation with mobile-first responsive design
+  - Backend API implementation with Twilio OTP authentication
+  - Paystack payment integration for premium access
+  - Admin dashboard for managing subjects, quizzes, and questions
+  - Subject-specific color theming throughout the app
+
+## Architecture
+
+### Frontend
+- **React** with TypeScript for type safety
+- **Zustand** for lightweight state management (auth, quiz state)
+- **TanStack Query** for efficient data fetching and caching
+- **Wouter** for client-side routing
+- **Shadcn UI** with Tailwind CSS for component library
+- **Web Speech API** for text-to-speech functionality
+
+### Backend
+- **Express.js** API server
+- **Supabase (PostgreSQL)** for database
+- **Drizzle ORM** for type-safe database operations
+- **Twilio** for WhatsApp/SMS OTP authentication
+- **Paystack** for payment processing with split payment support
+- **bcrypt** for password hashing
+
+### Database Schema
+- **users**: Quiz takers with phone authentication
+- **admins**: Super admin and sub-admins
+- **otp_sessions**: OTP verification sessions
+- **subjects**: Quiz categories with theme colors
+- **quizzes**: Quiz details and settings
+- **questions**: MCQ and True/False questions
+- **quiz_attempts**: User quiz submissions and scores
+- **payments**: Premium membership transactions
+- **payment_settings**: Configurable pricing and Paystack settings
+
+## Key Features
+
+### User Features
+- Phone number registration with WhatsApp OTP (SMS fallback)
+- 4-week auto-login for verified users
+- Subject browsing with Free/Premium badges
+- Single-question-per-page quiz interface
+- Subject-specific color-coded progress bars
+- Text-to-speech question reading
+- Mark questions for review
+- Instant feedback option (admin configurable)
+- Detailed results with question review
+- User profile with quiz history and payment records
+- Payment modal for premium access
+
+### Admin Features
+- Separate super admin authentication
+- Subject management with color picker and Free/Premium toggle
+- Quiz creation with grading settings (pass mark, time limit, instant feedback, randomize)
+- Question editor supporting Multiple Choice and True/False types
+- Admin user management (super admin can create sub-admins)
+- Payment settings configuration (price, Paystack split code)
+- Analytics dashboard (total attempts, pass rate, average score, revenue)
+
+## Authentication Flow
+
+### User Auth
+1. User enters phone number
+2. System attempts auto-login if verified within 4 weeks
+3. If auto-login fails, generates OTP and sends via WhatsApp
+4. Falls back to SMS if WhatsApp fails
+5. User verifies OTP (6-digit code)
+6. User provides name if first-time registration
+7. Session persisted in Zustand with localStorage
+
+### Admin Auth
+- Separate login at `/admin/login`
+- Username/password authentication with bcrypt
+- Super admin: `username: admin, password: admin123`
+- Super admin can create additional admins
+
+## API Endpoints
+
+### Auth
+- `POST /api/auth/send-otp` - Send OTP via WhatsApp/SMS
+- `POST /api/auth/verify-otp` - Verify OTP and create/login user
+- `POST /api/auth/login-without-otp` - Auto-login for recent users
+- `PATCH /api/users/profile` - Update user name
+
+### Admin Auth
+- `POST /api/admin/login` - Admin authentication
+- `POST /api/admin/create-admin` - Create new admin (super admin only)
+- `GET /api/admin/admins` - List all admins
+- `DELETE /api/admin/admins/:id` - Delete admin
+
+### Subjects
+- `GET /api/subjects` - Get all subjects with quizzes
+- `GET /api/admin/subjects` - Admin: Get all subjects
+- `POST /api/admin/subjects` - Admin: Create subject
+- `PATCH /api/admin/subjects/:id` - Admin: Update subject
+- `DELETE /api/admin/subjects/:id` - Admin: Delete subject
+
+### Quizzes
+- `GET /api/quizzes/:id` - Get quiz with subject and questions
+- `GET /api/admin/quizzes` - Admin: Get all quizzes
+- `POST /api/admin/quizzes` - Admin: Create quiz
+- `PATCH /api/admin/quizzes/:id` - Admin: Update quiz
+- `DELETE /api/admin/quizzes/:id` - Admin: Delete quiz
+
+### Questions
+- `GET /api/admin/questions/:quizId` - Admin: Get quiz questions
+- `POST /api/admin/quizzes/:quizId/questions` - Admin: Create question
+- `PATCH /api/admin/questions/:id` - Admin: Update question
+- `DELETE /api/admin/questions/:id` - Admin: Delete question
+
+### Quiz Attempts
+- `POST /api/quizzes/:id/submit` - Submit quiz attempt
+- `GET /api/quiz-attempts/:id` - Get attempt with results
+- `GET /api/quiz-attempts` - Get user's attempt history
+- `GET /api/admin/attempts` - Admin: Get all attempts
+
+### Payments
+- `POST /api/payments/initialize` - Initialize Paystack payment
+- `GET /api/payments/verify/:reference` - Verify payment
+- `GET /api/payments/user` - Get user's payment history
+- `GET /api/admin/payments` - Admin: Get all payments
+
+### Payment Settings
+- `GET /api/payment-settings` - Get current settings
+- `PATCH /api/admin/payment-settings` - Admin: Update settings
+
+## Design System
+
+### Colors (from design_guidelines.md)
+- **Primary**: Blue (217 91% 60%) - Main brand color
+- **Success**: Green (142 76% 36%) - Pass state, free badges
+- **Premium**: Gold (43 96% 56%) - Premium features
+- **Warning**: Orange (38 92% 50%) - Low time alerts
+- **Destructive**: Red (0 72% 51%) - Fail state, errors
+
+### Subject Theme Colors
+- Business Law: Blue (217 91% 60%)
+- Corporate Governance: Green (142 71% 45%)
+- Taxation: Purple (262 83% 58%)
+- General: Orange (24 95% 53%)
+- Customizable per subject in admin
+
+### Typography
+- **Primary Font**: Inter (400, 500, 600, 700)
+- **Monospace**: JetBrains Mono for timers, scores
+- Mobile-first type scale with responsive sizing
+
+### Layout
+- Mobile-first with breakpoints: base (< 640px), md (768px), lg (1024px)
+- Quiz content max-width: 2xl (672px) for optimal reading
+- Full-screen question pages on mobile (min-h-screen)
+
+## User Preferences
+- Dark/light mode toggle with system preference detection
+- Theme persisted in localStorage
+- Smooth transitions between modes
+
+## Development Commands
+- `npm run dev` - Start development server (frontend + backend)
+- `npx tsx server/seed-admin.ts` - Create super admin (when DATABASE_URL works)
+
+## Environment Variables
+- `DATABASE_URL` - Supabase PostgreSQL connection string
+- `PAYSTACK_SECRET_KEY` - Paystack API secret key
+- `SESSION_SECRET` - Express session secret (auto-generated)
+- Twilio credentials managed via Replit connector
+
+## Super Admin Credentials
+- Username: `admin`
+- Password: `admin123`
+- Access at: `/admin/login`
+
+## Project Structure
+```
+├── client/src/
+│   ├── components/
+│   │   ├── auth/              # OTP input, phone auth modal
+│   │   ├── admin/             # Admin login, layout
+│   │   ├── quiz/              # Subject cards, question cards, progress, payment modal
+│   │   ├── theme-provider.tsx
+│   │   ├── theme-toggle.tsx
+│   │   └── user-layout.tsx
+│   ├── pages/
+│   │   ├── dashboard.tsx      # User dashboard
+│   │   ├── quiz-page.tsx      # Quiz taking interface
+│   │   ├── results-page.tsx   # Quiz results
+│   │   ├── profile-page.tsx   # User profile
+│   │   ├── admin-dashboard.tsx
+│   │   ├── admin-subjects.tsx
+│   │   ├── admin-quizzes.tsx
+│   │   ├── admin-questions.tsx
+│   │   └── admin-settings.tsx
+│   ├── store/
+│   │   ├── auth.ts            # Zustand auth store
+│   │   └── quiz.ts            # Zustand quiz state
+│   ├── hooks/
+│   │   └── use-tts.ts         # Text-to-speech hook
+│   └── App.tsx
+├── server/
+│   ├── routes.ts              # All API endpoints
+│   ├── db.ts                  # Drizzle database client
+│   ├── services/
+│   │   └── twilio.ts          # Twilio OTP service
+│   └── seed-admin.ts          # Super admin seeder
+├── shared/
+│   └── schema.ts              # Drizzle schema with relations
+└── drizzle/
+    └── 0000_init.sql          # Initial migration
+```
+
+## Security & Session Management
+- **Session Tokens**: Server-issued httpOnly cookies (not client-controlled headers)
+- **User Sessions**: 28-day token expiry for auto-login feature
+- **Admin Sessions**: 24-hour token expiry for security
+- **Token Format**: `{userId/adminId}:{timestamp}` validated server-side
+- **Protected Routes**: All use requireUser or requireAdmin middleware
+- **Cookie Settings**: httpOnly, sameSite: 'lax', secure in production
+
+## Notes
+- Subject theme colors are customizable and affect progress bars
+- Payment flow redirects to Paystack, then back to callback URL
+- OTP sessions expire after 10 minutes
+- Verified users can auto-login for 28 days
+- Frontend uses credentials: 'include' for all API requests to send session cookies
