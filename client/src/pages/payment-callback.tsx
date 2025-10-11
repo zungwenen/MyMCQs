@@ -41,8 +41,8 @@ export default function PaymentCallback() {
     }
   }, [reference]);
 
-  const isSuccess = verifyPaymentMutation.isSuccess && verifyPaymentMutation.data?.data?.status === "success";
-  const isError = verifyPaymentMutation.isError || (verifyPaymentMutation.isSuccess && verifyPaymentMutation.data?.data?.status !== "success");
+  const isSuccess = verifyPaymentMutation.isSuccess && verifyPaymentMutation.data?.status && verifyPaymentMutation.data?.data?.status === "success";
+  const isError = verifyPaymentMutation.isError || (verifyPaymentMutation.isSuccess && (!verifyPaymentMutation.data?.status || verifyPaymentMutation.data?.data?.status !== "success"));
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
