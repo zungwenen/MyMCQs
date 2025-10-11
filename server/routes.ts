@@ -791,12 +791,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { membershipPrice, paystackSplitCode } = req.body;
       const settings = await db.query.paymentSettings.findFirst();
       
-      const [updated] = await db.update(schema.paymentSettings)
-        .set({ membershipPrice, paystackSplitCode, updatedAt: new Date() })
-        .where(eq(schema.paymentSettings.id, settings!.id))
-        .returning();
+      let result;
+      if (settings) {
+        // Update existing settings
+        const [updated] = await db.update(schema.paymentSettings)
+          .set({ membershipPrice, paystackSplitCode, updatedAt: new Date() })
+          .where(eq(schema.paymentSettings.id, settings.id))
+          .returning();
+        result = updated;
+      } else {
+        // Create new settings (for fresh production databases)
+        const [created] = await db.insert(schema.paymentSettings)
+          .values({ membershipPrice, paystackSplitCode })
+          .returning();
+        result = created;
+      }
       
-      res.json(updated);
+      res.json(result);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
