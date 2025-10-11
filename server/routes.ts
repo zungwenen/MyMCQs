@@ -180,6 +180,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== ADMIN AUTH ROUTES =====
   
+  // Check if setup is needed (no admins exist)
+  app.get("/api/admin/setup-needed", async (req, res) => {
+    try {
+      const adminCount = await db.select({ count: sql<number>`count(*)::int` })
+        .from(schema.admins);
+      
+      const needsSetup = adminCount[0].count === 0;
+      res.json({ needsSetup });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Initial setup - create first super admin (only works if no admins exist)
+  app.post("/api/admin/setup", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+
+      // Check if any admins already exist
+      const adminCount = await db.select({ count: sql<number>`count(*)::int` })
+        .from(schema.admins);
+      
+      if (adminCount[0].count > 0) {
+        return res.status(403).json({ message: "Setup already completed. Admins exist in the system." });
+      }
+
+      // Validate inputs
+      if (!username || username.length < 3) {
+        return res.status(400).json({ message: "Username must be at least 3 characters" });
+      }
+      if (!password || password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+
+      // Create the first super admin
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const [admin] = await db.insert(schema.admins).values({
+        username,
+        password: hashedPassword,
+        isSuperAdmin: true,
+      }).returning();
+
+      res.json({ 
+        success: true, 
+        message: "Super admin created successfully",
+        admin: { id: admin.id, username: admin.username }
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   app.post("/api/admin/login", async (req, res) => {
     try {
       const { username, password } = req.body;
