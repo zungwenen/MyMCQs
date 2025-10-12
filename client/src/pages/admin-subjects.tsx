@@ -12,14 +12,41 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Subject } from "@shared/schema";
 
-const THEME_COLORS = [
-  { name: "Blue", value: "217 91% 60%" },
-  { name: "Green", value: "142 71% 45%" },
-  { name: "Purple", value: "262 83% 58%" },
-  { name: "Orange", value: "24 95% 53%" },
-  { name: "Pink", value: "330 81% 60%" },
-  { name: "Teal", value: "173 80% 40%" },
-];
+// Helper function to convert HSL to hex for color picker
+const hslToHex = (hsl: string): string => {
+  const [h, s, l] = hsl.split(' ').map(v => parseFloat(v));
+  const lightness = l / 100;
+  const a = (s / 100) * Math.min(lightness, 1 - lightness);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = lightness - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+};
+
+// Helper function to convert hex to HSL
+const hexToHsl = (hex: string): string => {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+
+  return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+};
 
 export default function AdminSubjects() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,7 +55,7 @@ export default function AdminSubjects() {
     name: "",
     description: "",
     isPremium: false,
-    themeColor: THEME_COLORS[0].value,
+    themeColor: "217 91% 60%", // Default blue color
   });
   const { toast } = useToast();
 
@@ -87,7 +114,7 @@ export default function AdminSubjects() {
       name: "",
       description: "",
       isPremium: false,
-      themeColor: THEME_COLORS[0].value,
+      themeColor: "217 91% 60%", // Default blue color
     });
     setEditingSubject(null);
   };
@@ -197,26 +224,25 @@ export default function AdminSubjects() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Theme Color</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {THEME_COLORS.map((color) => (
-                  <button
-                    key={color.value}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, themeColor: color.value })}
-                    className={`p-3 rounded-lg border-2 transition-all ${
-                      formData.themeColor === color.value ? "border-primary" : "border-border"
-                    }`}
-                    style={{ backgroundColor: `hsl(${color.value} / 0.2)` }}
-                    data-testid={`color-${color.name.toLowerCase()}`}
-                  >
-                    <div
-                      className="w-full h-8 rounded"
-                      style={{ backgroundColor: `hsl(${color.value})` }}
-                    />
-                    <p className="text-xs mt-2 text-center">{color.name}</p>
-                  </button>
-                ))}
+              <Label htmlFor="themeColor">Theme Color</Label>
+              <div className="flex items-center gap-3">
+                <Input
+                  id="themeColor"
+                  type="color"
+                  value={hslToHex(formData.themeColor)}
+                  onChange={(e) => setFormData({ ...formData, themeColor: hexToHsl(e.target.value) })}
+                  className="w-20 h-10 cursor-pointer"
+                  data-testid="input-color-picker"
+                />
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">
+                    Selected color: <span className="font-mono text-xs">{formData.themeColor}</span>
+                  </p>
+                  <div 
+                    className="mt-1 h-2 rounded-full" 
+                    style={{ backgroundColor: `hsl(${formData.themeColor})` }}
+                  />
+                </div>
               </div>
             </div>
             <div className="flex items-center justify-between p-4 rounded-lg border">

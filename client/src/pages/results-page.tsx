@@ -53,7 +53,7 @@ export default function ResultsPage() {
               <XCircle className="h-10 w-10 text-destructive" />
             </div>
           )}
-          <h1 className="text-4xl md:text-5xl font-bold mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">
             {passed ? "Congratulations!" : "Keep Trying!"}
           </h1>
           <p className="text-muted-foreground">

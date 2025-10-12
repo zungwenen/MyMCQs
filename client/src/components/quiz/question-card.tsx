@@ -38,7 +38,7 @@ export function QuestionCard({
     <Card className="border-0 shadow-none">
       <CardContent className="p-6 space-y-6">
         <div className="flex items-start justify-between gap-4">
-          <h2 className="text-2xl md:text-3xl font-semibold leading-tight flex-1">
+          <h2 className="text-xl md:text-2xl font-semibold leading-tight flex-1">
             {question.questionText}
           </h2>
           <div className="flex gap-2">
