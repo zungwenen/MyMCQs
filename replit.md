@@ -4,6 +4,13 @@
 Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabase, Zustand, and TanStack Query. The platform enables users to take quizzes on various subjects with WhatsApp/SMS OTP authentication and premium content access via Paystack payments.
 
 ## Recent Changes
+- **2025-10-12**: UI/UX Enhancement Package
+  - Added compelling hero section for non-logged-in users with law student imagery
+  - Hero section includes key features, CTAs, and subject preview
+  - Reduced font sizes across all pages for better mobile experience and visual hierarchy
+  - Replaced preset color selection with HTML5 color picker in admin subjects
+  - Admins can now choose any color for subject theming (unlimited options)
+
 - **2025-10-12**: Payment Callback URL Fix for Production
   - Fixed payment callback redirect to work in production deployments
   - Updated to use REPLIT_DOMAINS (production) instead of REPLIT_DEV_DOMAIN (dev only)
