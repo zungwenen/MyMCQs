@@ -4,6 +4,12 @@
 Easyread IQ is a mobile-first MCQ quiz web application built with React, Supabase, Zustand, and TanStack Query. The platform enables users to take quizzes on various subjects with WhatsApp/SMS OTP authentication and premium content access via Paystack payments.
 
 ## Recent Changes
+- **2025-10-12**: Payment Callback URL Fix for Production
+  - Fixed payment callback redirect to work in production deployments
+  - Updated to use REPLIT_DOMAINS (production) instead of REPLIT_DEV_DOMAIN (dev only)
+  - Resolves "dead link" issue causing payments to remain in pending status
+  - Callback URL now correctly redirects users back to app after Paystack payment
+
 - **2025-10-11**: Payment Error Message Improvement
   - Payment initialization now returns actual Paystack error messages
   - Helps debug split payment issues (invalid codes, authorization errors, etc.)
