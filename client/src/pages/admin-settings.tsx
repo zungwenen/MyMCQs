@@ -11,6 +11,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth";
 import type { PaymentSettings, Admin, IqGrade, Subject } from "@shared/schema";
+import { Footer } from "@/components/layout/footer";
 
 type IqGradeWithSubject = IqGrade & { subject?: Subject | null };
 
@@ -219,7 +220,7 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen flex flex-col space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Settings</h1>
         <p className="text-muted-foreground">Manage payment, admin, and IQ grade settings</p>
@@ -592,6 +593,7 @@ export default function AdminSettings() {
           </Card>
         </TabsContent>
       </Tabs>
+      <Footer />
     </div>
   );
 }

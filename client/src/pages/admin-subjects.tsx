@@ -11,6 +11,7 @@ import { Loader2, Plus, Edit, Trash2, Crown } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Subject } from "@shared/schema";
+import { Footer } from "@/components/layout/footer";
 
 // Helper function to convert HSL to hex for color picker
 const hslToHex = (hsl: string): string => {
@@ -148,7 +149,7 @@ export default function AdminSubjects() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen flex flex-col space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Subjects</h1>
@@ -281,6 +282,7 @@ export default function AdminSubjects() {
           </form>
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 }

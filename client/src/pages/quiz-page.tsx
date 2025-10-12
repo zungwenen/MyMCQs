@@ -10,6 +10,7 @@ import { Loader2, ChevronRight, Send } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Quiz, Question, Subject } from "@shared/schema";
+import { Footer } from "@/components/layout/footer";
 
 export default function QuizPage() {
   const { id } = useParams();
@@ -113,7 +114,7 @@ export default function QuizPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen flex flex-col bg-background pb-24">
       <QuizProgress
         currentQuestion={currentQuestionIndex}
         totalQuestions={quiz.questions.length}
@@ -168,6 +169,7 @@ export default function QuizPage() {
           </Button>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

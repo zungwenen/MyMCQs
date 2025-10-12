@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Loader2, CheckCircle2, XCircle, Clock, Award, Home, RotateCcw, Brain } from "lucide-react";
 import type { QuizAttempt, Quiz, Subject, Question } from "@shared/schema";
+import { Footer } from "@/components/layout/footer";
 
 export default function ResultsPage() {
   const { id } = useParams();
@@ -41,8 +42,8 @@ export default function ResultsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen flex flex-col bg-background py-8">
+      <div className="max-w-4xl mx-auto px-4 flex-1">
         <div className="text-center mb-8">
           {passed ? (
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-success/10 mb-4">
@@ -219,6 +220,7 @@ export default function ResultsPage() {
           </Link>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

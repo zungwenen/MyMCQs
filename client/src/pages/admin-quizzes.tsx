@@ -13,6 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import type { Quiz, Subject } from "@shared/schema";
+import { Footer } from "@/components/layout/footer";
 
 export default function AdminQuizzes() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -124,7 +125,7 @@ export default function AdminQuizzes() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen flex flex-col space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Quizzes</h1>
@@ -306,6 +307,7 @@ export default function AdminQuizzes() {
           </form>
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 }

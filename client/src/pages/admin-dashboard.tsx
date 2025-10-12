@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Users, DollarSign, TrendingUp, Loader2 } from "lucide-react";
 import type { QuizAttempt, Payment } from "@shared/schema";
+import { Footer } from "@/components/layout/footer";
 
 export default function AdminDashboard() {
   const { data: attempts, isLoading: loadingAttempts } = useQuery<QuizAttempt[]>({
@@ -29,7 +30,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen flex flex-col space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
         <p className="text-muted-foreground">Overview of quiz performance and analytics</p>
@@ -161,6 +162,7 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+      <Footer />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Footer } from "@/components/layout/footer";
 
 export default function AdminSetup() {
   const [username, setUsername] = useState("");
@@ -95,7 +96,7 @@ export default function AdminSetup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -176,6 +177,7 @@ export default function AdminSetup() {
           </form>
         </CardContent>
       </Card>
+      <Footer />
     </div>
   );
 }

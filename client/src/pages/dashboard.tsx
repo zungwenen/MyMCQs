@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Crown, ArrowRight, BookOpen, Trophy, Zap } from "lucide-react";
 import { useState } from "react";
 import { PaymentModal } from "@/components/quiz/payment-modal";
+import { PhoneAuthModal } from "@/components/auth/phone-auth-modal";
+import { Footer } from "@/components/layout/footer";
 import { useAuthStore } from "@/store/auth";
 import type { Subject, Quiz, Payment } from "@shared/schema";
 import heroImage from "@assets/Imagine Nigerian law students taking multiple-choice questions in class_1760245749265.jpg";
@@ -128,43 +130,18 @@ export default function Dashboard() {
               ))}
             </div>
 
-            <div className="text-center mt-8">
-              <Button
-                variant="outline"
-                onClick={() => setShowAuthModal(true)}
-                data-testid="button-sign-in-subjects"
-              >
-                Sign in to access all quizzes
-              </Button>
-            </div>
           </section>
         )}
 
-        {/* Auth Modal Placeholder - will trigger existing auth flow */}
-        {showAuthModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-background rounded-lg p-6 max-w-md w-full">
-              <h3 className="text-xl font-semibold mb-4">Sign In Required</h3>
-              <p className="text-muted-foreground mb-6">
-                Please use the "Login" button in the navigation to sign in with your phone number.
-              </p>
-              <Button
-                onClick={() => setShowAuthModal(false)}
-                className="w-full"
-                data-testid="button-close-auth-modal"
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        )}
+        <PhoneAuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
+        <Footer />
       </div>
     );
   }
 
   // Show dashboard for logged-in users
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
@@ -208,6 +185,7 @@ export default function Dashboard() {
           window.location.reload();
         }}
       />
+      <Footer />
     </div>
   );
 }

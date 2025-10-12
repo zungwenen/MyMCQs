@@ -13,6 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import type { Question, Quiz } from "@shared/schema";
+import { Footer } from "@/components/layout/footer";
 
 export default function AdminQuestions() {
   const { quizId } = useParams();
@@ -135,7 +136,7 @@ export default function AdminQuestions() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen flex flex-col space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/admin/quizzes">
           <Button variant="ghost" size="icon">
@@ -328,6 +329,7 @@ export default function AdminQuestions() {
           </form>
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 }

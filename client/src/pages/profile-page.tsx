@@ -10,6 +10,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import type { QuizAttempt, Payment, Quiz, Subject } from "@shared/schema";
+import { Footer } from "@/components/layout/footer";
 
 export default function ProfilePage() {
   const { user, setUser } = useAuthStore();
@@ -69,8 +70,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-6xl mx-auto px-4">
+    <div className="min-h-screen flex flex-col bg-background py-8">
+      <div className="max-w-6xl mx-auto px-4 flex-1">
         <h1 className="text-2xl md:text-3xl font-bold mb-8">My Profile</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -231,6 +232,7 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </div>
   );
 }
