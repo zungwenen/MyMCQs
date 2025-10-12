@@ -50,27 +50,52 @@ export async function getTwilioFromPhoneNumber() {
 export async function sendOTP(phoneNumber: string, otp: string): Promise<{ via: 'whatsapp' | 'sms' }> {
   const client = await getTwilioClient();
   const from = await getTwilioFromPhoneNumber();
+  const whatsappNumber = process.env.TWILIO_WHATSAPP_NUMBER;
+  const whatsappTemplateSid = process.env.TWILIO_WHATSAPP_TEMPLATE_SID;
 
+  // Try WhatsApp with Content Template first
+  if (whatsappNumber && whatsappTemplateSid) {
+    try {
+      console.log(`[Twilio] Attempting WhatsApp OTP to ${phoneNumber} using template ${whatsappTemplateSid}`);
+      await client.messages.create({
+        from: `whatsapp:${whatsappNumber}`,
+        to: `whatsapp:${phoneNumber}`,
+        contentSid: whatsappTemplateSid,
+        contentVariables: JSON.stringify({
+          '1': otp
+        })
+      });
+      console.log(`[Twilio] WhatsApp OTP sent successfully to ${phoneNumber}`);
+      return { via: 'whatsapp' };
+    } catch (whatsappError: any) {
+      console.error(`[Twilio] WhatsApp failed for ${phoneNumber}:`, {
+        code: whatsappError.code,
+        message: whatsappError.message,
+        status: whatsappError.status
+      });
+      // Fall through to SMS
+    }
+  } else {
+    console.warn('[Twilio] WhatsApp credentials not configured, skipping WhatsApp delivery');
+  }
+
+  // Fallback to SMS
   try {
-    // Try WhatsApp first
+    console.log(`[Twilio] Attempting SMS OTP to ${phoneNumber}`);
     await client.messages.create({
-      from: `whatsapp:${from}`,
-      to: `whatsapp:${phoneNumber}`,
+      from: from,
+      to: phoneNumber,
       body: `Your Easyread IQ verification code is: ${otp}. Valid for 10 minutes.`,
     });
-    return { via: 'whatsapp' };
-  } catch (error) {
-    // Fallback to SMS
-    try {
-      await client.messages.create({
-        from: from,
-        to: phoneNumber,
-        body: `Your Easyread IQ verification code is: ${otp}. Valid for 10 minutes.`,
-      });
-      return { via: 'sms' };
-    } catch (smsError) {
-      throw new Error('Failed to send OTP via WhatsApp or SMS');
-    }
+    console.log(`[Twilio] SMS OTP sent successfully to ${phoneNumber}`);
+    return { via: 'sms' };
+  } catch (smsError: any) {
+    console.error(`[Twilio] SMS failed for ${phoneNumber}:`, {
+      code: smsError.code,
+      message: smsError.message,
+      status: smsError.status
+    });
+    throw new Error(`Failed to send OTP: ${smsError.message || 'Unknown error'}`);
   }
 }
 
