@@ -17,9 +17,11 @@ The application is built with a modern web stack, prioritizing performance, scal
 - **Subject Theming**: Admins can customize subject-specific colors using an HTML5 color picker, which are applied to elements like progress bars.
 - **Typography**: Employs Inter as the primary font and JetBrains Mono for data displays (timers, scores).
 - **Layout**: Quiz content is constrained to `max-width: 2xl` for readability; question pages are full-screen on mobile.
-- **Hero Section**: A compelling hero section is displayed for non-logged-in users, featuring law student imagery, key features, CTAs, and a subject preview.
+- **Hero Section**: A compelling hero section is displayed for non-logged-in users, featuring law student imagery, key features, CTAs, and a subject preview. The "Get Started Free" CTA triggers the login dialog directly.
 - **Font Sizes**: Reduced across all pages for improved mobile experience and visual hierarchy.
 - **Question Review**: Converted to an accordion UI for better user experience.
+- **Global Footer**: Consistent footer appears on all pages (dashboard, profile, quiz, results, admin pages) with dynamic year copyright, "Easyread Series" branding, love icon, and 9px responsive typography.
+- **Login Dialog**: Redesigned PhoneAuthModal with blue circular phone icon header, centered "Welcome to Easyread IQ" title, clean card-based layout, inline phone icon in input field, and proper accessibility support via sr-only dialog headers.
 
 ### Technical Implementations
 - **Frontend**: React (TypeScript) for UI, Zustand for state management, TanStack Query for data fetching, Wouter for routing, Shadcn UI with Tailwind CSS for components, and Web Speech API for text-to-speech.
