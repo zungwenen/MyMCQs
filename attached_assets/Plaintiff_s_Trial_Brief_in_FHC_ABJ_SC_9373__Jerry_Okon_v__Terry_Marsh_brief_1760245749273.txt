@@ -1,0 +1,87 @@
+PLAINTIFF’S TRIAL BRIEF IN FHC/ABJ/SC/9373: JERRY OKON V. TERRY MARSH
+
+IN THE FEDERAL HIGH COURT
+NIGERIA
+
+Case No: FHC/ABJ/SC/9373
+
+Plaintiff: Jerry Okon
+Defendant: Terry Marsh
+
+TRIAL BRIEF
+
+INTRODUCTION
+This is the Plaintiff’s trial brief filed on behalf of Mr. Jerry Okon in the Federal High Court, Abuja Judicial Division, in Suit No. FHC/ABJ/SC/9373, against Mr. Terry Marsh. The action seeks declaratory and consequential reliefs for ownership and protection of copyright in a computer program and related documentation developed by the Plaintiff, together with remedies for infringement, account of profits, delivery up, and injunctive reliefs. The matter falls within the exclusive jurisdiction of the Federal High Court as it relates to copyright and intellectual property.
+
+STATEMENT OF FACTS
+1. The Plaintiff, Mr. Jerry Okon, is a software engineer and independent consultant who, since 2021, has developed and iterated a proprietary tax-automation engine internally named TaxOptima, together with related source code, APIs, and user documentation. The Plaintiff developed the core engine on his personal devices, outside any contract of service, and at his own expense.
+2. In or about February 2023, the Defendant, Mr. Terry Marsh, an entrepreneur who brokers software solutions to corporate clients, approached the Plaintiff to assist in customizing a front-end interface and deployment workflow suitable for SME tax remittance. The parties executed a short-form consultancy agreement dated 10 March 2023, which appointed the Plaintiff as an independent contractor for a limited integration and customization engagement. No clause in the agreement assigned the Plaintiff’s pre-existing intellectual property to the Defendant, and there is no separate written assignment or license signed by the Plaintiff in favour of the Defendant.
+3. The agreement contemplated that newly created deliverables made to a particular client’s written specifications and paid for in full would vest in that client, but expressly preserved the consultant’s pre-existing tools, libraries, and know-how. The Plaintiff’s pre-existing TaxOptima engine was only to be interfaced, not transferred, and the Plaintiff retained control of the core source code. Parties used a private repository where the Plaintiff pushed compiled modules for testing on a limited access basis.
+4. By June 2023, the Defendant, without the Plaintiff’s written consent, cloned and integrated the Plaintiff’s compiled modules and documentation into a product the Defendant marketed as MarshTax Pro. The Defendant commenced commercial licensing to multiple third parties, receiving subscription fees and set-up charges. The Plaintiff was neither credited nor remunerated beyond consultancy fees, and was denied access to financial records connected to deployments of MarshTax Pro.
+5. Upon discovery in August 2023, the Plaintiff issued a cease-and-desist and demand for an accounting of profits, delivery up of infringing copies, and execution of a proper license on market terms. The Defendant refused, asserting that the work was created in the course of the engagement and that all IP vesting attached to him as the commissioning party.
+6. The Plaintiff instituted this action seeking declarations that he is the first owner of copyright in the software and documentation, that the Defendant’s acts amount to infringement, and for injunctive and pecuniary remedies including an account of profits, delivery up, damages in the alternative, and costs.
+
+ISSUES PRESENTED
+1. 1. Whether the Federal High Court has jurisdiction over the subject matter of the Plaintiff’s claims.
+2. 2. Whether the Plaintiff is the first owner of copyright in the TaxOptima computer program and related documentation.
+3. 3. Whether any valid assignment or license exists in favour of the Defendant transferring or permitting exploitation of the Plaintiff’s copyright.
+4. 4. Whether the Defendant’s acts of reproduction, distribution, adaptation, and commercial deployment constitute infringement of the Plaintiff’s copyright.
+5. 5. If infringement is established, what remedies are appropriate, including declaratory reliefs, injunctions, delivery up, account of profits, damages in the alternative, interest, and costs.
+
+LEGAL ARGUMENTS
+A. Jurisdiction of the Federal High Court
+- By Section 251(1)(f) of the Constitution of the Federal Republic of Nigeria 1999 (as amended), matters pertaining to copyright and intellectual property are within the exclusive jurisdiction of the Federal High Court. The claims, seeking declarations of copyright ownership, infringement remedies, injunctions, and account of profits, are squarely intellectual property claims and are properly before this Honourable Court.
+
+B. First ownership and subsistence of copyright in computer programs
+- Under the Copyright Act, 2022, computer programs are protected as literary works. Copyright subsists upon original expression fixed in a tangible medium, and the first owner is the author, save as otherwise provided by law or by a valid written assignment or agreement to the contrary. An independent contractor who develops pre-existing code outside a contract of service remains the first owner unless there is a clear, written transfer.
+- The Court of Appeal in Tunde Alabi v. MegaTech Solutions Ltd & Anor (2024) LPELR-99999 (CA) affirmed that ownership turns on whether creation was in the course of employment and whether any contractual vesting clause is clear and enforceable. Ambiguous or overreaching IP clauses are construed contra proferentem against the party who drafted them.
+
+C. No assignment or license without writing
+- Copyright assignments and exclusive licenses must be in writing and signed by or on behalf of the copyright owner to be enforceable. Absent such writing, the default rule vests ownership in the author, and any purported transfer fails. A commissioning arrangement with an independent contractor does not, without a clear written assignment, divest the author of ownership.
+
+D. Burden and standard of proof
+- Under the Evidence Act, 2011, Sections 131–133, he who asserts must prove. The Plaintiff bears the initial burden to establish authorship and subsistence of copyright; upon doing so, the evidential burden shifts to the Defendant to justify title by assignment, license, or statutory vesting. Mere assertions of commissioning or direction are insufficient without documentary proof.
+
+E. Infringement and remedies
+- Unauthorized reproduction, adaptation, distribution, communication to the public, or commercial exploitation of a protected work constitutes infringement. Remedies include declaratory reliefs, injunctions (interim and perpetual), delivery up or destruction of infringing copies, account of profits or, in the alternative, damages, together with interest and costs. The Federal High Court is empowered under its equitable jurisdiction and applicable rules to order an account and ancillary relief.
+
+F. Construction of ambiguous IP clauses
+- Ambiguous vesting clauses are construed strictly and against the proferens. The Court of Appeal in Alabi v. MegaTech held that a sweeping clause purporting to vest all inventions during employment was too broad and unenforceable to the extent of its ambiguity. A fortiori, in consultancy contexts, absent an unequivocal assignment, pre-existing IP remains with the author; only bespoke, paid-for deliverables may pass on clear terms.
+
+ANALYSIS
+Issue 1: Jurisdiction
+The Plaintiff’s claims are for declaration of copyright ownership, infringement, account of profits, delivery up, and injunctions. These are matters relating to copyright and intellectual property within Section 251(1)(f) of the 1999 Constitution (as amended). The Federal High Court therefore has exclusive jurisdiction. No contrary plea has been substantiated to oust jurisdiction.
+
+Issue 2: First ownership
+The uncontroverted evidence shows the Plaintiff authored the TaxOptima core engine beginning in 2021 on his personal devices and maintained version histories evidencing authorship. The March 2023 consultancy agreement appointed the Plaintiff as an independent contractor, not an employee. There is no clause in the agreement expressly transferring the Plaintiff’s pre-existing IP. Under the Copyright Act, 2022, the first owner of a computer program is its author unless otherwise provided by law or by a valid written transfer. The Defendant’s case relies on a generalized claim of commissioning and direction, which does not suffice to displace statutory default ownership in the absence of a signed assignment. The reasoning in Tunde Alabi v. MegaTech Solutions Ltd & Anor (2024) LPELR-99999 (CA) is apposite: ownership hinges on the course-of-employment nexus and clarity of contractual vesting. Here, there is no contract of service, and the vesting language does not capture pre-existing works.
+
+Issue 3: Assignment or license
+The Defendant has produced no written assignment or exclusive license signed by the Plaintiff. The consultancy contemplated interfacing the Plaintiff’s existing engine with a front-end and deploying compiled modules for testing. At most, an implied limited license for testing purposes may be inferred, but such implied permission cannot be stretched into unrestricted commercial exploitation. The statutory requirement of writing for assignments and exclusive licenses defeats the Defendant’s ownership claim.
+
+Issue 4: Infringement
+By cloning compiled modules, distributing them as part of MarshTax Pro, and licensing to third parties without the Plaintiff’s consent, the Defendant reproduced and communicated the Plaintiff’s work to the public for profit. Those acts are classic indicia of infringement of the exclusive rights in a literary work (computer program) under the Copyright Act, 2022. The absence of employer ownership, a signed assignment, or a defined license scope makes the exploitation unlawful. Alabi v. MegaTech underlines that broad assertions of control without demonstrable contractual clarity will not defeat the author’s rights.
+
+Issue 5: Remedies
+Equity demands an account of profits to strip the Defendant of gains wrongfully made from the Plaintiff’s work. A perpetual injunction and delivery up will prevent further dissemination. In the alternative to an account, compensatory damages are appropriate, assessed by reference to a reasonable royalty and market rates for comparable licenses. Given the Defendant’s refusal to negotiate and continued use post-notice, aggravated damages are justified. Interest should run from the date of wrongful exploitation until judgment and thereafter at the Court’s rate.
+
+Addressing potential counter-arguments: The Defendant may invoke a work-for-hire or course-of-employment theory. That fails on the facts: the Plaintiff was an independent consultant, used personal equipment, and brought a pre-existing engine to which only compiled modules were shared. Even applying Alabi v. MegaTech, no evidence shows use of the Defendant’s proprietary resources or that the core engine was created as part of an employment duty. The consultancy’s limited scope and the preservation of pre-existing IP distinguish this case from an employment scenario. The contra proferentem rule further defeats any ambiguous vesting language advanced by the Defendant.
+
+CONCLUSION
+The Plaintiff has established authorship and first ownership of the TaxOptima program and related documentation, demonstrated the absence of any valid assignment or license to the Defendant, and proven that the Defendant’s commercial exploitation constitutes infringement. The claims are properly within the jurisdiction of the Federal High Court. The Court should grant the declaratory and injunctive reliefs, order delivery up, direct an account of profits with payment over to the Plaintiff, or in the alternative award substantial damages, together with interest and costs.
+
+PRAYER FOR RELIEF
+WHEREFORE the Plaintiff respectfully prays for:
+1. A declaration that the Plaintiff, Jerry Okon, is the first owner of copyright in the computer program known as TaxOptima and its related source code, compiled modules, APIs, and documentation.
+2. A declaration that the Defendant’s reproduction, adaptation, distribution, licensing, and other commercial exploitation of the Plaintiff’s work without written authorization constitute infringement of the Plaintiff’s copyright.
+3. An order of perpetual injunction restraining the Defendant, his agents, privies, or anyone acting through him from further reproducing, adapting, distributing, offering for sale, licensing, or otherwise exploiting the Plaintiff’s work in any manner whatsoever.
+4. An order directing the Defendant to deliver up to the Court or the Plaintiff for destruction all infringing copies, media, devices, and materials embodying the Plaintiff’s work, including repositories, builds, and deployment packages within the Defendant’s possession, custody, or control.
+5. An order for a full account of profits made by the Defendant from the infringing use and commercialization of the Plaintiff’s work, and for payment over to the Plaintiff of all sums found due upon taking such account, together with interest at the Court’s rate from the dates of receipt until liquidation.
+6. In the alternative to prayer 5, an award of general and aggravated damages assessed by reference to a reasonable royalty and market rates for comparable licenses, with interest from the date of first infringement until judgment and thereafter at the Court’s rate.
+7. Costs of this action assessed on a full indemnity or substantial contribution basis.
+8. Such further or other orders as this Honourable Court may deem fit to make in the circumstances.
+
+AUTHORITIES CITED
+1. Constitution of the Federal Republic of Nigeria 1999 (as amended), Section 251(1)(f)
+2. Copyright Act, 2022 (Nigeria)
+3. Evidence Act, 2011 (Nigeria), Sections 131–133
+4. Tunde Alabi v. MegaTech Solutions Ltd & Anor (2024) LPELR-99999 (CA)
