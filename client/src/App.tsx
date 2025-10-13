@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/auth";
 import { UserLayout } from "@/components/user-layout";
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { AdminLogin } from "@/components/admin/admin-login";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 
 import Dashboard from "@/pages/dashboard";
 import QuizPage from "@/pages/quiz-page";
@@ -91,6 +92,7 @@ function App() {
               <Router />
             </UserLayout>
           )}
+          <InstallPrompt />
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>
