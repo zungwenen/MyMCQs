@@ -668,20 +668,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const reference = `PAY_${Date.now()}_${userId}`;
       
-      // Build callback URL from trusted environment variables
-      // REPLIT_DOMAINS is available in production (comma-separated list)
-      // REPLIT_DEV_DOMAIN is available in development workspace
-      const replitDomains = process.env.REPLIT_DOMAINS;
-      const replitDevDomain = process.env.REPLIT_DEV_DOMAIN;
+      // Build callback URL from APP_URL environment variable
+      // APP_URL should be set to your domain (e.g., https://iq.easyread.ng)
+      const appUrl = process.env.APP_URL;
       
       let baseUrl: string;
-      if (replitDomains) {
-        // Production: Use first domain from REPLIT_DOMAINS
-        const domain = replitDomains.split(',')[0].trim();
-        baseUrl = domain.startsWith('http') ? domain : `https://${domain}`;
-      } else if (replitDevDomain) {
-        // Development: Use REPLIT_DEV_DOMAIN
-        baseUrl = replitDevDomain.startsWith('http') ? replitDevDomain : `https://${replitDevDomain}`;
+      if (appUrl) {
+        // Production/Custom domain: Use APP_URL
+        baseUrl = appUrl.startsWith('http') ? appUrl : `https://${appUrl}`;
       } else {
         // Fallback for local development
         baseUrl = 'http://localhost:5000';
