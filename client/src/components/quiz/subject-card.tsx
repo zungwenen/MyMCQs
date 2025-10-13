@@ -3,17 +3,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Crown, Lock, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-import type { Subject, Quiz } from "@shared/schema";
+import type { Subject, Quiz, QuizAttempt } from "@shared/schema";
 import { Link } from "wouter";
 
 interface SubjectCardProps {
   subject: Subject & { quizzes: Quiz[] };
   hasPremiumAccess: boolean;
+  userQuizAttempts: QuizAttempt[];
 }
 
-export function SubjectCard({ subject, hasPremiumAccess }: SubjectCardProps) {
+export function SubjectCard({ subject, hasPremiumAccess, userQuizAttempts }: SubjectCardProps) {
   const [expanded, setExpanded] = useState(false);
   const canAccess = !subject.isPremium || hasPremiumAccess;
+
+  const hasAttempted = (quizId: string) => {
+    return userQuizAttempts.some(attempt => attempt.quizId === quizId && attempt.completedAt);
+  };
 
   return (
     <Card 
@@ -93,7 +98,7 @@ export function SubjectCard({ subject, hasPremiumAccess }: SubjectCardProps) {
                       className="ml-3"
                       data-testid={`button-start-quiz-${quiz.id}`}
                     >
-                      Start
+                      {hasAttempted(quiz.id) ? 'Retake' : 'Start'}
                     </Button>
                   </Link>
                 ) : (

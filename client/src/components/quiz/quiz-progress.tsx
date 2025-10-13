@@ -27,14 +27,25 @@ export function QuizProgress({
   const isLowTime = timeRemaining !== undefined && timeRemaining < 60;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b">
+    <div 
+      className="fixed top-0 left-0 right-0 z-50 bg-background border-b"
+      style={{
+        borderBottomColor: `hsl(${themeColor} / 0.2)`
+      }}
+    >
       <div className="max-w-4xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4 mb-2">
           <span className="text-sm font-medium">
             Question {currentQuestion + 1} of {totalQuestions}
           </span>
           {timeRemaining !== undefined && (
-            <div className={`flex items-center gap-2 font-mono text-sm ${isLowTime ? "text-warning" : "text-muted-foreground"}`}>
+            <div 
+              className={`flex items-center gap-2 font-mono text-sm px-2 py-1 rounded ${isLowTime ? "text-warning bg-warning/10" : ""}`}
+              style={!isLowTime ? {
+                color: `hsl(${themeColor})`,
+                backgroundColor: `hsl(${themeColor} / 0.1)`
+              } : undefined}
+            >
               <Timer className="h-4 w-4" />
               <span data-testid="timer">{formatTime(timeRemaining)}</span>
             </div>

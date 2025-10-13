@@ -7,7 +7,7 @@ import { PaymentModal } from "@/components/quiz/payment-modal";
 import { PhoneAuthModal } from "@/components/auth/phone-auth-modal";
 import { Footer } from "@/components/layout/footer";
 import { useAuthStore } from "@/store/auth";
-import type { Subject, Quiz, Payment } from "@shared/schema";
+import type { Subject, Quiz, Payment, QuizAttempt } from "@shared/schema";
 import heroImage from "@assets/Imagine Nigerian law students taking multiple-choice questions in class_1760245749265.jpg";
 
 export default function Dashboard() {
@@ -21,6 +21,11 @@ export default function Dashboard() {
 
   const { data: payments } = useQuery<Payment[]>({
     queryKey: ["/api/payments/user"],
+    enabled: !!user,
+  });
+
+  const { data: quizAttempts } = useQuery<QuizAttempt[]>({
+    queryKey: ["/api/quiz-attempts/user"],
     enabled: !!user,
   });
 
@@ -126,6 +131,7 @@ export default function Dashboard() {
                   key={subject.id}
                   subject={subject}
                   hasPremiumAccess={false}
+                  userQuizAttempts={[]}
                 />
               ))}
             </div>
@@ -172,6 +178,7 @@ export default function Dashboard() {
               key={subject.id}
               subject={subject}
               hasPremiumAccess={hasPremiumAccess}
+              userQuizAttempts={quizAttempts || []}
             />
           ))}
         </div>

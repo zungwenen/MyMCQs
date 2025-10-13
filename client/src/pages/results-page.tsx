@@ -7,13 +7,34 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Loader2, CheckCircle2, XCircle, Clock, Award, Home, RotateCcw, Brain } from "lucide-react";
 import type { QuizAttempt, Quiz, Subject, Question } from "@shared/schema";
 import { Footer } from "@/components/layout/footer";
+import { useEffect, useState } from "react";
+import Confetti from "react-confetti";
 
 export default function ResultsPage() {
   const { id } = useParams();
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
 
   const { data: attempt, isLoading } = useQuery<QuizAttempt & { quiz: Quiz & { subject: Subject; questions: Question[] } }>({
     queryKey: ["/api/quiz-attempts", id],
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (attempt?.passed) {
+      setShowConfetti(true);
+      const timer = setTimeout(() => setShowConfetti(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [attempt?.passed]);
 
   if (isLoading) {
     return (
@@ -43,6 +64,15 @@ export default function ResultsPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background py-8">
+      {showConfetti && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={500}
+          gravity={0.3}
+        />
+      )}
       <div className="max-w-4xl mx-auto px-4 flex-1">
         <div className="text-center mb-8">
           {passed ? (
