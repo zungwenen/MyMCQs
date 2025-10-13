@@ -31,6 +31,7 @@ The application is built with a modern web stack, prioritizing performance, scal
 - **Quiz System**: Single-question-per-page interface, subject-specific progress bars (with theme-colored timer section), instant feedback (configurable), detailed results with IQ score display, and confetti celebration for passing scores. "Retake" button displays for quizzes already completed by the user.
 - **IQ Assessment**: Configurable grading system allowing admins to define global or subject-specific IQ grade ranges. Quiz submissions automatically calculate and display IQ scores.
 - **Admin Features**: Comprehensive dashboard for managing subjects, quizzes, questions (MCQ, True/False), admin users, IQ grades, and payment settings. Includes an initial setup page for creating the first super admin in production environments.
+- **Progressive Web App (PWA)**: Full PWA support with standalone display mode (no browser UI when installed), offline capability via service worker, platform-specific install prompts (native for Android/Chrome, Safari instructions for iOS/iPadOS including modern iPadOS with desktop UA detection), app icons in 8 sizes (72px-512px), and localStorage-based install state tracking.
 - **Deployment**: Application is portable and can run on cPanel hosting. No Replit-specific dependencies. Complete deployment guide available in CPANEL_DEPLOYMENT.md.
 
 ### System Design Choices
