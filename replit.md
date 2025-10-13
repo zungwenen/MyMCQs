@@ -28,7 +28,7 @@ The application is built with a modern web stack, prioritizing performance, scal
 - **Backend**: Express.js API, Supabase (PostgreSQL) for the database, and Drizzle ORM for type-safe database interactions.
 - **Authentication**: WhatsApp/SMS OTP via Twilio Direct SDK (using TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN), and `bcrypt` for password hashing for admin accounts. User sessions use httpOnly cookie-based server-issued tokens (28-day expiry), while admin sessions have a 24-hour expiry.
 - **Payment Processing**: Paystack integration with support for split payments. Callback URL configured via APP_URL environment variable.
-- **Quiz System**: Single-question-per-page interface, subject-specific progress bars, instant feedback (configurable), and detailed results with IQ score display.
+- **Quiz System**: Single-question-per-page interface, subject-specific progress bars (with theme-colored timer section), instant feedback (configurable), detailed results with IQ score display, and confetti celebration for passing scores. "Retake" button displays for quizzes already completed by the user.
 - **IQ Assessment**: Configurable grading system allowing admins to define global or subject-specific IQ grade ranges. Quiz submissions automatically calculate and display IQ scores.
 - **Admin Features**: Comprehensive dashboard for managing subjects, quizzes, questions (MCQ, True/False), admin users, IQ grades, and payment settings. Includes an initial setup page for creating the first super admin in production environments.
 - **Deployment**: Application is portable and can run on cPanel hosting. No Replit-specific dependencies. Complete deployment guide available in CPANEL_DEPLOYMENT.md.
