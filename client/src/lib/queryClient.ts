@@ -1,9 +1,20 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorMessage = text;
+    
+    // Try to parse JSON error message
+    try {
+      const json = JSON.parse(text);
+      errorMessage = json.message || json.error || text;
+    } catch {
+      // Use text as-is if not JSON
+    }
+    
+    throw new Error(errorMessage);
   }
 }
 
@@ -55,6 +66,17 @@ export const queryClient = new QueryClient({
     },
     mutations: {
       retry: false,
+      onError: (error: any) => {
+        // Global error handler for mutations
+        const message = error?.message || "An unexpected error occurred";
+        toast({
+          title: "Error",
+          description: message,
+          variant: "destructive",
+        });
+      },
     },
   },
+  mutationCache: undefined,
+  queryCache: undefined,
 });

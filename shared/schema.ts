@@ -56,10 +56,20 @@ export const quizzes = pgTable("quizzes", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Questions - belongs to a quiz
+// Scenarios - container for scenario-based questions
+export const scenarios = pgTable("scenarios", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  quizId: varchar("quiz_id").notNull().references(() => quizzes.id, { onDelete: "cascade" }),
+  passage: text("passage").notNull(),
+  orderIndex: integer("order_index").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Questions - belongs to a quiz (can optionally belong to a scenario)
 export const questions = pgTable("questions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   quizId: varchar("quiz_id").notNull().references(() => quizzes.id, { onDelete: "cascade" }),
+  scenarioId: varchar("scenario_id").references(() => scenarios.id, { onDelete: "cascade" }), // null for regular questions
   questionText: text("question_text").notNull(),
   questionType: text("question_type").notNull(), // 'multiple_choice' | 'true_false' | 'fill_in_gap'
   options: jsonb("options").notNull(), // Array of strings for MCQ, ['True', 'False'] for T/F, acceptable answer variations for fill-in-gap
@@ -123,6 +133,7 @@ export const insertAdminSchema = createInsertSchema(admins).omit({ id: true, cre
 export const insertOtpSessionSchema = createInsertSchema(otpSessions).omit({ id: true, createdAt: true });
 export const insertSubjectSchema = createInsertSchema(subjects).omit({ id: true, createdAt: true });
 export const insertQuizSchema = createInsertSchema(quizzes).omit({ id: true, createdAt: true });
+export const insertScenarioSchema = createInsertSchema(scenarios).omit({ id: true, createdAt: true });
 export const insertQuestionSchema = createInsertSchema(questions).omit({ id: true, createdAt: true });
 export const insertQuizAttemptSchema = createInsertSchema(quizAttempts).omit({ id: true, startedAt: true });
 export const insertPaymentSchema = createInsertSchema(payments).omit({ id: true, createdAt: true });
@@ -144,6 +155,9 @@ export type InsertSubject = z.infer<typeof insertSubjectSchema>;
 
 export type Quiz = typeof quizzes.$inferSelect;
 export type InsertQuiz = z.infer<typeof insertQuizSchema>;
+
+export type Scenario = typeof scenarios.$inferSelect;
+export type InsertScenario = z.infer<typeof insertScenarioSchema>;
 
 export type Question = typeof questions.$inferSelect;
 export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
@@ -170,14 +184,27 @@ export const quizzesRelations = relations(quizzes, ({ one, many }) => ({
     fields: [quizzes.subjectId],
     references: [subjects.id],
   }),
+  scenarios: many(scenarios),
   questions: many(questions),
   attempts: many(quizAttempts),
+}));
+
+export const scenariosRelations = relations(scenarios, ({ one, many }) => ({
+  quiz: one(quizzes, {
+    fields: [scenarios.quizId],
+    references: [quizzes.id],
+  }),
+  questions: many(questions),
 }));
 
 export const questionsRelations = relations(questions, ({ one }) => ({
   quiz: one(quizzes, {
     fields: [questions.quizId],
     references: [quizzes.id],
+  }),
+  scenario: one(scenarios, {
+    fields: [questions.scenarioId],
+    references: [scenarios.id],
   }),
 }));
 

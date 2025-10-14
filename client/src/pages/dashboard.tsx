@@ -132,6 +132,7 @@ export default function Dashboard() {
                   subject={subject}
                   hasPremiumAccess={false}
                   userQuizAttempts={[]}
+                  onLoginRequired={() => setShowAuthModal(true)}
                 />
               ))}
             </div>

@@ -5,15 +5,18 @@ import { Crown, Lock, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import type { Subject, Quiz, QuizAttempt } from "@shared/schema";
 import { Link } from "wouter";
+import { useAuthStore } from "@/store/auth";
 
 interface SubjectCardProps {
   subject: Subject & { quizzes: Quiz[] };
   hasPremiumAccess: boolean;
   userQuizAttempts: QuizAttempt[];
+  onLoginRequired?: () => void;
 }
 
-export function SubjectCard({ subject, hasPremiumAccess, userQuizAttempts }: SubjectCardProps) {
+export function SubjectCard({ subject, hasPremiumAccess, userQuizAttempts, onLoginRequired }: SubjectCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const { user } = useAuthStore();
   const canAccess = !subject.isPremium || hasPremiumAccess;
 
   const hasAttempted = (quizId: string) => {
@@ -91,16 +94,28 @@ export function SubjectCard({ subject, hasPremiumAccess, userQuizAttempts }: Sub
                   </div>
                 </div>
                 {canAccess ? (
-                  <Link href={`/quiz/${quiz.id}`}>
+                  user ? (
+                    <Link href={`/quiz/${quiz.id}`}>
+                      <Button
+                        size="sm"
+                        style={{ backgroundColor: `hsl(${subject.themeColor})`, color: 'white' }}
+                        className="ml-3"
+                        data-testid={`button-start-quiz-${quiz.id}`}
+                      >
+                        {hasAttempted(quiz.id) ? 'Retake' : 'Start'}
+                      </Button>
+                    </Link>
+                  ) : (
                     <Button
                       size="sm"
+                      onClick={() => onLoginRequired?.()}
                       style={{ backgroundColor: `hsl(${subject.themeColor})`, color: 'white' }}
                       className="ml-3"
                       data-testid={`button-start-quiz-${quiz.id}`}
                     >
-                      {hasAttempted(quiz.id) ? 'Retake' : 'Start'}
+                      Start
                     </Button>
-                  </Link>
+                  )
                 ) : (
                   <Button
                     size="sm"

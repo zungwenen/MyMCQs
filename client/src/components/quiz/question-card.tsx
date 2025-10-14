@@ -73,8 +73,8 @@ export function QuestionCard({
   };
 
   return (
-    <Card className="border-0 shadow-none">
-      <CardContent className="p-6 space-y-6">
+    <Card className="border-0 shadow-none min-h-[400px] flex flex-col">
+      <CardContent className="p-6 space-y-6 flex-1 flex flex-col justify-between">
         <div className="space-y-4">
           <div className="flex gap-2 justify-end">
             <Button
