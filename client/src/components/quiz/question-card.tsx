@@ -1,8 +1,9 @@
+import { useState, useEffect, type KeyboardEvent } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Check, X, Volume2, VolumeX, Bookmark } from "lucide-react";
+import { Check, X, Volume2, VolumeX, Bookmark, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Question } from "@shared/schema";
 
@@ -32,6 +33,12 @@ export function QuestionCard({
   onStopSpeaking,
 }: QuestionCardProps) {
   const options = question.options as string[];
+  const [localAnswer, setLocalAnswer] = useState("");
+  
+  // Reset localAnswer when question changes or answer is recorded
+  useEffect(() => {
+    setLocalAnswer("");
+  }, [question.id, selectedAnswer]);
   
   // Check if answer is correct based on question type
   let isCorrect = false;
@@ -53,14 +60,23 @@ export function QuestionCard({
     }
   }
 
+  const handleSubmitFillInGap = () => {
+    if (localAnswer.trim() && !selectedAnswer) {
+      onSelectAnswer(localAnswer);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSubmitFillInGap();
+    }
+  };
+
   return (
     <Card className="border-0 shadow-none">
       <CardContent className="p-6 space-y-6">
-        <div className="flex items-start justify-between gap-4">
-          <h2 className="text-base md:text-lg font-semibold leading-tight flex-1">
-            {question.questionText}
-          </h2>
-          <div className="flex gap-2">
+        <div className="space-y-4">
+          <div className="flex gap-2 justify-end">
             <Button
               size="icon"
               variant="ghost"
@@ -83,25 +99,42 @@ export function QuestionCard({
               {isSpeaking ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
             </Button>
           </div>
+          <h2 className="text-base md:text-lg font-semibold leading-tight">
+            {question.questionText}
+          </h2>
         </div>
 
         {question.questionType === "fill_in_gap" ? (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Input
-                type="text"
-                placeholder="Type your answer here..."
-                value={selectedAnswer || ""}
-                onChange={(e) => !showFeedback && onSelectAnswer(e.target.value)}
-                disabled={showFeedback}
-                className={cn(
-                  "text-base font-medium",
-                  showFeedback && isCorrect && "border-success bg-success/10",
-                  showFeedback && isIncorrect && "border-destructive bg-destructive/10"
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="Type your answer here..."
+                  value={selectedAnswer || localAnswer}
+                  onChange={(e) => !selectedAnswer && setLocalAnswer(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={!!selectedAnswer}
+                  className={cn(
+                    "text-base font-medium flex-1",
+                    selectedAnswer && isCorrect && "border-success bg-success/10",
+                    selectedAnswer && isIncorrect && "border-destructive bg-destructive/10"
+                  )}
+                  data-testid="input-answer"
+                />
+                {!selectedAnswer && localAnswer.trim() && (
+                  <Button
+                    onClick={handleSubmitFillInGap}
+                    size="icon"
+                    className="shrink-0"
+                    style={{ backgroundColor: `hsl(${themeColor})` }}
+                    data-testid="button-submit-answer"
+                  >
+                    <CheckCircle className="h-5 w-5" />
+                  </Button>
                 )}
-                data-testid="input-answer"
-              />
-              {showFeedback && (
+              </div>
+              {selectedAnswer && showFeedback && (
                 <div className="space-y-2">
                   {isCorrect ? (
                     <Badge variant="outline" className="border-success text-success bg-success/20">
