@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Check, X, Volume2, VolumeX, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Question } from "@shared/schema";
@@ -31,8 +32,26 @@ export function QuestionCard({
   onStopSpeaking,
 }: QuestionCardProps) {
   const options = question.options as string[];
-  const isCorrect = showFeedback && selectedAnswer === question.correctAnswer;
-  const isIncorrect = showFeedback && selectedAnswer && selectedAnswer !== question.correctAnswer;
+  
+  // Check if answer is correct based on question type
+  let isCorrect = false;
+  let isIncorrect = false;
+  
+  if (showFeedback && selectedAnswer) {
+    if (question.questionType === "fill_in_gap") {
+      // For fill-in-gap, check against all acceptable answer variations
+      const acceptableAnswers = (question.options as string[]).map(ans => 
+        ans.trim().toLowerCase()
+      );
+      const normalizedUserAnswer = selectedAnswer.trim().toLowerCase();
+      isCorrect = acceptableAnswers.includes(normalizedUserAnswer);
+      isIncorrect = !isCorrect;
+    } else {
+      // For MCQ and True/False, use exact matching
+      isCorrect = selectedAnswer === question.correctAnswer;
+      isIncorrect = selectedAnswer !== question.correctAnswer;
+    }
+  }
 
   return (
     <Card className="border-0 shadow-none">
@@ -66,51 +85,91 @@ export function QuestionCard({
           </div>
         </div>
 
-        <div className="space-y-3">
-          {options.map((option, index) => {
-            const isSelected = selectedAnswer === option;
-            const isThisCorrect = showFeedback && option === question.correctAnswer;
-            const isThisWrong = showFeedback && isSelected && option !== question.correctAnswer;
-
-            return (
-              <button
-                key={index}
-                onClick={() => !showFeedback && onSelectAnswer(option)}
+        {question.questionType === "fill_in_gap" ? (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="Type your answer here..."
+                value={selectedAnswer || ""}
+                onChange={(e) => !showFeedback && onSelectAnswer(e.target.value)}
                 disabled={showFeedback}
                 className={cn(
-                  "w-full text-left p-4 rounded-lg border-2 transition-all",
-                  "hover-elevate active-elevate-2",
-                  !showFeedback && !isSelected && "border-border bg-card",
-                  !showFeedback && isSelected && "border-primary bg-primary/5",
-                  isThisCorrect && "border-success bg-success/10",
-                  isThisWrong && "border-destructive bg-destructive/10"
+                  "text-base font-medium",
+                  showFeedback && isCorrect && "border-success bg-success/10",
+                  showFeedback && isIncorrect && "border-destructive bg-destructive/10"
                 )}
-                style={
-                  !showFeedback && isSelected
-                    ? { borderColor: `hsl(${themeColor})`, backgroundColor: `hsl(${themeColor} / 0.05)` }
-                    : {}
-                }
-                data-testid={`option-${index}`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm md:text-base font-medium flex-1">{option}</span>
-                  {isThisCorrect && (
+                data-testid="input-answer"
+              />
+              {showFeedback && (
+                <div className="space-y-2">
+                  {isCorrect ? (
                     <Badge variant="outline" className="border-success text-success bg-success/20">
                       <Check className="h-3 w-3 mr-1" />
                       Correct
                     </Badge>
-                  )}
-                  {isThisWrong && (
-                    <Badge variant="outline" className="border-destructive text-destructive bg-destructive/20">
-                      <X className="h-3 w-3 mr-1" />
-                      Wrong
-                    </Badge>
+                  ) : (
+                    <>
+                      <Badge variant="outline" className="border-destructive text-destructive bg-destructive/20">
+                        <X className="h-3 w-3 mr-1" />
+                        Incorrect
+                      </Badge>
+                      <div className="p-3 rounded-lg bg-success/10 border border-success/30">
+                        <p className="text-sm font-medium text-success">Correct answer: {question.correctAnswer}</p>
+                      </div>
+                    </>
                   )}
                 </div>
-              </button>
-            );
-          })}
-        </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {options.map((option, index) => {
+              const isSelected = selectedAnswer === option;
+              const isThisCorrect = showFeedback && option === question.correctAnswer;
+              const isThisWrong = showFeedback && isSelected && option !== question.correctAnswer;
+
+              return (
+                <button
+                  key={index}
+                  onClick={() => !showFeedback && onSelectAnswer(option)}
+                  disabled={showFeedback}
+                  className={cn(
+                    "w-full text-left p-4 rounded-lg border-2 transition-all",
+                    "hover-elevate active-elevate-2",
+                    !showFeedback && !isSelected && "border-border bg-card",
+                    !showFeedback && isSelected && "border-primary bg-primary/5",
+                    isThisCorrect && "border-success bg-success/10",
+                    isThisWrong && "border-destructive bg-destructive/10"
+                  )}
+                  style={
+                    !showFeedback && isSelected
+                      ? { borderColor: `hsl(${themeColor})`, backgroundColor: `hsl(${themeColor} / 0.05)` }
+                      : {}
+                  }
+                  data-testid={`option-${index}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm md:text-base font-medium flex-1">{option}</span>
+                    {isThisCorrect && (
+                      <Badge variant="outline" className="border-success text-success bg-success/20">
+                        <Check className="h-3 w-3 mr-1" />
+                        Correct
+                      </Badge>
+                    )}
+                    {isThisWrong && (
+                      <Badge variant="outline" className="border-destructive text-destructive bg-destructive/20">
+                        <X className="h-3 w-3 mr-1" />
+                        Wrong
+                      </Badge>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {showFeedback && question.explanation && (
           <div className="mt-6 p-4 rounded-lg bg-muted/50 border animate-slide-up">

@@ -539,7 +539,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let score = 0;
       quiz.questions.forEach((q) => {
-        if (answers[q.id] === q.correctAnswer) {
+        const userAnswer = answers[q.id];
+        let isCorrect = false;
+
+        if (q.questionType === "fill_in_gap") {
+          // For fill-in-gap, check against all acceptable answer variations
+          const acceptableAnswers = (q.options as string[]).map(ans => 
+            ans.trim().toLowerCase()
+          );
+          const normalizedUserAnswer = (userAnswer || "").trim().toLowerCase();
+          isCorrect = acceptableAnswers.includes(normalizedUserAnswer);
+        } else {
+          // For MCQ and True/False, use exact matching
+          isCorrect = userAnswer === q.correctAnswer;
+        }
+
+        if (isCorrect) {
           score++;
         }
       });

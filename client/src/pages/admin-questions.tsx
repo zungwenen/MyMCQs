@@ -21,7 +21,7 @@ export default function AdminQuestions() {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [formData, setFormData] = useState({
     questionText: "",
-    questionType: "multiple_choice" as "multiple_choice" | "true_false",
+    questionType: "multiple_choice" as "multiple_choice" | "true_false" | "fill_in_gap",
     options: ["", "", "", ""],
     correctAnswer: "",
     explanation: "",
@@ -97,7 +97,11 @@ export default function AdminQuestions() {
     setFormData({
       questionText: question.questionText,
       questionType: question.questionType as any,
-      options: question.questionType === "true_false" ? ["True", "False"] : options,
+      options: question.questionType === "true_false" 
+        ? ["True", "False"] 
+        : question.questionType === "fill_in_gap"
+        ? options
+        : options,
       correctAnswer: question.correctAnswer,
       explanation: question.explanation || "",
     });
@@ -106,10 +110,26 @@ export default function AdminQuestions() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const data = {
-      ...formData,
-      options: formData.questionType === "true_false" ? ["True", "False"] : formData.options.filter(o => o.trim()),
-    };
+    
+    let data: any;
+    if (formData.questionType === "true_false") {
+      data = {
+        ...formData,
+        options: ["True", "False"],
+      };
+    } else if (formData.questionType === "fill_in_gap") {
+      const filteredOptions = formData.options.filter(o => o.trim());
+      data = {
+        ...formData,
+        options: filteredOptions,
+        correctAnswer: filteredOptions[0] || "", // Primary answer is first variation
+      };
+    } else {
+      data = {
+        ...formData,
+        options: formData.options.filter(o => o.trim()),
+      };
+    }
     
     if (editingQuestion) {
       updateMutation.mutate({ id: editingQuestion.id, data });
@@ -122,7 +142,7 @@ export default function AdminQuestions() {
     setFormData({
       ...formData,
       questionType: type as any,
-      options: type === "true_false" ? ["True", "False"] : ["", "", "", ""],
+      options: type === "true_false" ? ["True", "False"] : type === "fill_in_gap" ? [""] : ["", "", "", ""],
       correctAnswer: "",
     });
   };
@@ -163,7 +183,7 @@ export default function AdminQuestions() {
                     {index + 1}. {question.questionText}
                   </CardTitle>
                   <CardDescription className="mt-2">
-                    Type: {question.questionType === "true_false" ? "True/False" : "Multiple Choice"}
+                    Type: {question.questionType === "true_false" ? "True/False" : question.questionType === "fill_in_gap" ? "Fill in the Gap" : "Multiple Choice"}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -191,19 +211,39 @@ export default function AdminQuestions() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Options:</p>
-                <ul className="space-y-1">
-                  {(question.options as string[]).map((option, i) => (
-                    <li
-                      key={i}
-                      className={`text-sm p-2 rounded ${
-                        option === question.correctAnswer ? "bg-success/10 text-success" : "text-muted-foreground"
-                      }`}
-                    >
-                      {option} {option === question.correctAnswer && "✓"}
-                    </li>
-                  ))}
-                </ul>
+                {question.questionType === "fill_in_gap" ? (
+                  <>
+                    <p className="text-sm font-medium">Acceptable Answers:</p>
+                    <ul className="space-y-1">
+                      {(question.options as string[]).map((option, i) => (
+                        <li
+                          key={i}
+                          className={`text-sm p-2 rounded ${
+                            i === 0 ? "bg-success/10 text-success" : "bg-muted/50 text-muted-foreground"
+                          }`}
+                        >
+                          {option} {i === 0 && "✓ (Primary)"}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium">Options:</p>
+                    <ul className="space-y-1">
+                      {(question.options as string[]).map((option, i) => (
+                        <li
+                          key={i}
+                          className={`text-sm p-2 rounded ${
+                            option === question.correctAnswer ? "bg-success/10 text-success" : "text-muted-foreground"
+                          }`}
+                        >
+                          {option} {option === question.correctAnswer && "✓"}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -236,6 +276,7 @@ export default function AdminQuestions() {
                 <SelectContent>
                   <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
                   <SelectItem value="true_false">True/False</SelectItem>
+                  <SelectItem value="fill_in_gap">Fill in the Gap</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -268,31 +309,75 @@ export default function AdminQuestions() {
                   />
                 ))}
               </div>
-            ) : (
+            ) : formData.questionType === "true_false" ? (
               <div className="p-3 rounded-lg bg-muted/50">
                 <p className="text-sm text-muted-foreground">Options: True, False (automatically set)</p>
               </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>Correct Answer & Acceptable Variations</Label>
+                <p className="text-xs text-muted-foreground">Add acceptable answer variations (e.g., different spellings, formats). First one will be the primary answer.</p>
+                {formData.options.map((option, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      placeholder={index === 0 ? "Primary correct answer" : `Variation ${index}`}
+                      value={option}
+                      onChange={(e) => {
+                        const newOptions = [...formData.options];
+                        newOptions[index] = e.target.value;
+                        setFormData({ ...formData, options: newOptions });
+                      }}
+                      data-testid={`input-answer-variation-${index}`}
+                    />
+                    {index > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const newOptions = formData.options.filter((_, i) => i !== index);
+                          setFormData({ ...formData, options: newOptions });
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, options: [...formData.options, ""] })}
+                  className="w-full"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Variation
+                </Button>
+              </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="correctAnswer">Correct Answer</Label>
-              <Select
-                value={formData.correctAnswer}
-                onValueChange={(value) => setFormData({ ...formData, correctAnswer: value })}
-                required
-              >
-                <SelectTrigger data-testid="select-correct-answer">
-                  <SelectValue placeholder="Select correct answer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(formData.questionType === "true_false" ? ["True", "False"] : formData.options.filter(o => o.trim())).map((option, index) => (
-                    <SelectItem key={index} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {formData.questionType !== "fill_in_gap" && (
+              <div className="space-y-2">
+                <Label htmlFor="correctAnswer">Correct Answer</Label>
+                <Select
+                  value={formData.correctAnswer}
+                  onValueChange={(value) => setFormData({ ...formData, correctAnswer: value })}
+                  required
+                >
+                  <SelectTrigger data-testid="select-correct-answer">
+                    <SelectValue placeholder="Select correct answer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(formData.questionType === "true_false" ? ["True", "False"] : formData.options.filter(o => o.trim())).map((option, index) => (
+                      <SelectItem key={index} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="explanation">Explanation (Optional)</Label>

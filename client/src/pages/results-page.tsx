@@ -171,7 +171,21 @@ export default function ResultsPage() {
             <Accordion type="multiple" className="w-full" data-testid="accordion-question-review">
               {attempt.quiz.questions.map((question, index) => {
                 const userAnswer = answers[question.id];
-                const isCorrect = userAnswer === question.correctAnswer;
+                
+                // Check if answer is correct based on question type
+                let isCorrect = false;
+                if (question.questionType === "fill_in_gap") {
+                  // For fill-in-gap, check against all acceptable answer variations
+                  const acceptableAnswers = (question.options as string[]).map(ans => 
+                    ans.trim().toLowerCase()
+                  );
+                  const normalizedUserAnswer = (userAnswer || "").trim().toLowerCase();
+                  isCorrect = acceptableAnswers.includes(normalizedUserAnswer);
+                } else {
+                  // For MCQ and True/False, use exact matching
+                  isCorrect = userAnswer === question.correctAnswer;
+                }
+                
                 const truncatedQuestion = question.questionText.length > 80 
                   ? question.questionText.substring(0, 80) + "..." 
                   : question.questionText;
