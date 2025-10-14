@@ -455,6 +455,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== SCENARIO ROUTES =====
+
+  app.get("/api/admin/scenarios/:quizId", requireAdmin, async (req, res) => {
+    try {
+      const scenarios = await db.query.scenarios.findMany({
+        where: eq(schema.scenarios.quizId, req.params.quizId),
+        orderBy: (scenarios, { asc }) => [asc(scenarios.orderIndex)],
+        with: {
+          questions: {
+            orderBy: (questions, { asc }) => [asc(questions.orderIndex)],
+          },
+        },
+      });
+      res.json(scenarios);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/admin/quizzes/:quizId/scenarios", requireAdmin, async (req, res) => {
+    try {
+      const { passage } = req.body;
+      
+      const existingScenarios = await db.query.scenarios.findMany({
+        where: eq(schema.scenarios.quizId, req.params.quizId),
+      });
+      
+      const orderIndex = existingScenarios.length;
+
+      const [scenario] = await db.insert(schema.scenarios).values({
+        quizId: req.params.quizId,
+        passage,
+        orderIndex,
+      }).returning();
+
+      res.json(scenario);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.patch("/api/admin/scenarios/:id", requireAdmin, async (req, res) => {
+    try {
+      const { passage } = req.body;
+      const [scenario] = await db.update(schema.scenarios)
+        .set({ passage })
+        .where(eq(schema.scenarios.id, req.params.id))
+        .returning();
+      res.json(scenario);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/admin/scenarios/:id", requireAdmin, async (req, res) => {
+    try {
+      await db.delete(schema.scenarios).where(eq(schema.scenarios.id, req.params.id));
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/admin/scenarios/:scenarioId/questions", requireAdmin, async (req, res) => {
+    try {
+      const { questionText, questionType, options, correctAnswer, explanation } = req.body;
+      
+      // Get the scenario to know which quiz it belongs to
+      const scenario = await db.query.scenarios.findFirst({
+        where: eq(schema.scenarios.id, req.params.scenarioId),
+      });
+
+      if (!scenario) {
+        return res.status(404).json({ message: "Scenario not found" });
+      }
+      
+      // Get existing questions for this scenario to calculate orderIndex
+      const existingQuestions = await db.query.questions.findMany({
+        where: eq(schema.questions.scenarioId, req.params.scenarioId),
+      });
+      
+      const orderIndex = existingQuestions.length;
+
+      const [question] = await db.insert(schema.questions).values({
+        quizId: scenario.quizId,
+        scenarioId: req.params.scenarioId,
+        questionText,
+        questionType,
+        options,
+        correctAnswer,
+        explanation,
+        orderIndex,
+      }).returning();
+
+      res.json(question);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // ===== QUESTION ROUTES =====
   
   app.get("/api/admin/questions/:quizId", requireAdmin, async (req, res) => {
