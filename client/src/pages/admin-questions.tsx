@@ -17,6 +17,10 @@ import { Link } from "wouter";
 import type { Question, Quiz, Scenario } from "@shared/schema";
 import { Footer } from "@/components/layout/footer";
 
+type ScenarioWithQuestions = Scenario & {
+  questions?: Question[];
+};
+
 export default function AdminQuestions() {
   const { quizId } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,7 +48,7 @@ export default function AdminQuestions() {
     enabled: !!quizId,
   });
 
-  const { data: scenarios, isLoading: scenariosLoading } = useQuery<Scenario[]>({
+  const { data: scenarios, isLoading: scenariosLoading } = useQuery<ScenarioWithQuestions[]>({
     queryKey: ["/api/admin/scenarios", quizId],
     enabled: !!quizId,
   });

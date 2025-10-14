@@ -391,6 +391,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           questions: {
             orderBy: (questions, { asc }) => [asc(questions.orderIndex)],
           },
+          scenarios: {
+            orderBy: (scenarios, { asc }) => [asc(scenarios.orderIndex)],
+            with: {
+              questions: {
+                orderBy: (questions, { asc }) => [asc(questions.orderIndex)],
+              },
+            },
+          },
         },
       });
       res.json(quiz);

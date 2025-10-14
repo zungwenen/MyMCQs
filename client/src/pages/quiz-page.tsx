@@ -4,13 +4,21 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { QuestionCard } from "@/components/quiz/question-card";
 import { QuizProgress } from "@/components/quiz/quiz-progress";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuizStore } from "@/store/quiz";
 import { useTTS } from "@/hooks/use-tts";
-import { Loader2, ChevronRight, Send } from "lucide-react";
+import { Loader2, ChevronRight, Send, FileText } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Quiz, Question, Subject } from "@shared/schema";
+import type { Quiz, Question, Subject, Scenario } from "@shared/schema";
 import { Footer } from "@/components/layout/footer";
+
+type QuizWithScenarios = Quiz & { 
+  subject: Subject; 
+  questions: Question[];
+  scenarios?: (Scenario & { questions?: Question[] })[];
+};
 
 export default function QuizPage() {
   const { id } = useParams();
@@ -32,7 +40,7 @@ export default function QuizPage() {
 
   const [timeRemaining, setTimeRemaining] = useState<number | undefined>();
 
-  const { data: quiz, isLoading: loadingQuiz } = useQuery<Quiz & { subject: Subject; questions: Question[] }>({
+  const { data: quiz, isLoading: loadingQuiz } = useQuery<QuizWithScenarios>({
     queryKey: ["/api/quizzes", id],
   });
 
@@ -105,6 +113,9 @@ export default function QuizPage() {
   const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1;
   const hasAnswer = !!answers[currentQuestion.id];
 
+  // Find scenario for current question
+  const currentScenario = quiz.scenarios?.find(s => s.id === currentQuestion.scenarioId);
+
   const handleNext = () => {
     if (isLastQuestion) {
       submitQuizMutation.mutate();
@@ -123,7 +134,27 @@ export default function QuizPage() {
         themeColor={quiz.subject.themeColor}
       />
 
-      <div className="max-w-4xl mx-auto px-4 pt-24 pb-8">
+      <div className="max-w-4xl mx-auto px-4 pt-24 pb-8 space-y-4">
+        {currentScenario && (
+          <Accordion type="single" collapsible defaultValue="scenario" className="w-full">
+            <AccordionItem value="scenario">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" style={{ color: `hsl(${quiz.subject.themeColor})` }} />
+                  <span className="font-semibold">Scenario/Passage</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{currentScenario.passage}</p>
+                  </CardContent>
+                </Card>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        )}
+        
         <QuestionCard
           question={currentQuestion}
           selectedAnswer={answers[currentQuestion.id]}
