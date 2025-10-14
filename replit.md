@@ -22,6 +22,7 @@ The application is built with a modern web stack, prioritizing performance, scal
 - **Question Review**: Converted to an accordion UI for better user experience.
 - **Global Footer**: Consistent footer appears on all pages (dashboard, profile, quiz, results, admin pages) with dynamic year copyright, "Easyread Series" branding, love icon, and 9px responsive typography.
 - **Login Dialog**: Compact PhoneAuthModal (350x500px max) with blue circular phone icon, centered "Welcome to Easyread IQ" title, clean card-based layout, scaled typography and spacing, inline input icons, and viewport-safe responsive design using `min(500px, 90vh)` for height. Includes proper accessibility support via sr-only dialog headers.
+- **Fill-in-Gap Questions**: Text input with explicit submission (Enter key or themed CheckCircle button), local state prevents premature answer triggering, useEffect resets input when question changes, disabled after submission with instant feedback support.
 
 ### Technical Implementations
 - **Frontend**: React (TypeScript) for UI, Zustand for state management, TanStack Query for data fetching, Wouter for routing, Shadcn UI with Tailwind CSS for components, and Web Speech API for text-to-speech.
