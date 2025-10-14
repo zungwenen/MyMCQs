@@ -38,7 +38,7 @@ export function QuestionCard({
     <Card className="border-0 shadow-none">
       <CardContent className="p-6 space-y-6">
         <div className="flex items-start justify-between gap-4">
-          <h2 className="text-xl md:text-2xl font-semibold leading-tight flex-1">
+          <h2 className="text-base md:text-lg font-semibold leading-tight flex-1">
             {question.questionText}
           </h2>
           <div className="flex gap-2">
@@ -93,7 +93,7 @@ export function QuestionCard({
                 data-testid={`option-${index}`}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-medium flex-1">{option}</span>
+                  <span className="text-sm md:text-base font-medium flex-1">{option}</span>
                   {isThisCorrect && (
                     <Badge variant="outline" className="border-success text-success bg-success/20">
                       <Check className="h-3 w-3 mr-1" />

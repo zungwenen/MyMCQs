@@ -61,8 +61,8 @@ export const questions = pgTable("questions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   quizId: varchar("quiz_id").notNull().references(() => quizzes.id, { onDelete: "cascade" }),
   questionText: text("question_text").notNull(),
-  questionType: text("question_type").notNull(), // 'multiple_choice' | 'true_false'
-  options: jsonb("options").notNull(), // Array of strings for MCQ, ['True', 'False'] for T/F
+  questionType: text("question_type").notNull(), // 'multiple_choice' | 'true_false' | 'fill_in_gap'
+  options: jsonb("options").notNull(), // Array of strings for MCQ, ['True', 'False'] for T/F, acceptable answer variations for fill-in-gap
   correctAnswer: text("correct_answer").notNull(),
   explanation: text("explanation"),
   orderIndex: integer("order_index").notNull(),

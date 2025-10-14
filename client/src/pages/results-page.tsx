@@ -194,7 +194,7 @@ export default function ResultsPage() {
                         ) : (
                           <XCircle className="h-5 w-5 shrink-0" />
                         )}
-                        <span className="font-medium">
+                        <span className="text-sm font-medium">
                           Q{index + 1}: <span className="text-foreground">{truncatedQuestion}</span>
                         </span>
                       </div>
@@ -202,7 +202,7 @@ export default function ResultsPage() {
                     <AccordionContent>
                       <div className="space-y-3 pl-8 pr-4">
                         <div>
-                          <p className="font-medium text-foreground mb-2">{question.questionText}</p>
+                          <p className="text-sm font-medium text-foreground mb-2">{question.questionText}</p>
                         </div>
                         <div className="text-sm space-y-2">
                           <p>
