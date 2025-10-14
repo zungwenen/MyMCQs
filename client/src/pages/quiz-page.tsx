@@ -5,7 +5,7 @@ import { QuestionCard } from "@/components/quiz/question-card";
 import { QuizProgress } from "@/components/quiz/quiz-progress";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useQuizStore } from "@/store/quiz";
 import { useTTS } from "@/hooks/use-tts";
 import { Loader2, ChevronRight, Send, FileText } from "lucide-react";
@@ -18,6 +18,16 @@ type QuizWithScenarios = Quiz & {
   subject: Subject; 
   questions: Question[];
   scenarios?: (Scenario & { questions?: Question[] })[];
+};
+
+// Group questions: scenarios come first, then individual questions
+type QuestionGroup = {
+  type: 'scenario';
+  scenario: Scenario;
+  questions: Question[];
+} | {
+  type: 'single';
+  question: Question;
 };
 
 export default function QuizPage() {
@@ -109,15 +119,51 @@ export default function QuizPage() {
     );
   }
 
-  const currentQuestion = quiz.questions[currentQuestionIndex];
-  const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1;
-  const hasAnswer = !!answers[currentQuestion.id];
+  // Group questions by scenario or as individual questions
+  const questionGroups: QuestionGroup[] = [];
+  const processedScenarios = new Set<string>();
+  
+  quiz.questions.forEach((question) => {
+    if (question.scenarioId && !processedScenarios.has(question.scenarioId)) {
+      // Find scenario and all its questions
+      const scenario = quiz.scenarios?.find(s => s.id === question.scenarioId);
+      if (scenario) {
+        const scenarioQuestions = quiz.questions.filter(q => q.scenarioId === question.scenarioId);
+        questionGroups.push({
+          type: 'scenario',
+          scenario,
+          questions: scenarioQuestions,
+        });
+        processedScenarios.add(question.scenarioId);
+      } else {
+        // Fallback: Scenario object missing, treat as individual question
+        questionGroups.push({
+          type: 'single',
+          question,
+        });
+      }
+    } else if (!question.scenarioId) {
+      // Individual question
+      questionGroups.push({
+        type: 'single',
+        question,
+      });
+    }
+  });
 
-  // Find scenario for current question
-  const currentScenario = quiz.scenarios?.find(s => s.id === currentQuestion.scenarioId);
+  const currentGroup = questionGroups[currentQuestionIndex];
+  const isLastGroup = currentQuestionIndex === questionGroups.length - 1;
+
+  // Check if current group has all answers
+  let hasAllAnswers = false;
+  if (currentGroup.type === 'scenario') {
+    hasAllAnswers = currentGroup.questions.every(q => !!answers[q.id]);
+  } else {
+    hasAllAnswers = !!answers[currentGroup.question.id];
+  }
 
   const handleNext = () => {
-    if (isLastQuestion) {
+    if (isLastGroup) {
       submitQuizMutation.mutate();
     } else {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -128,45 +174,66 @@ export default function QuizPage() {
     <div className="min-h-screen flex flex-col bg-background pb-24">
       <QuizProgress
         currentQuestion={currentQuestionIndex}
-        totalQuestions={quiz.questions.length}
+        totalQuestions={questionGroups.length}
         timeRemaining={timeRemaining}
         timeLimitMinutes={quiz.timeLimitMinutes || undefined}
         themeColor={quiz.subject.themeColor}
       />
 
       <div className="max-w-4xl mx-auto px-4 pt-24 pb-8 space-y-4">
-        {currentScenario && (
-          <Accordion type="single" collapsible defaultValue="scenario" className="w-full">
-            <AccordionItem value="scenario">
-              <AccordionTrigger className="hover:no-underline">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" style={{ color: `hsl(${quiz.subject.themeColor})` }} />
-                  <span className="font-semibold">Scenario/Passage</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{currentScenario.passage}</p>
-                  </CardContent>
-                </Card>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+        {currentGroup.type === 'scenario' ? (
+          <div className="space-y-4">
+            <Accordion type="single" collapsible defaultValue="scenario" className="w-full">
+              <AccordionItem value="scenario">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" style={{ color: `hsl(${quiz.subject.themeColor})` }} />
+                    <span className="font-semibold">Read this scenario and answer the questions that follow.</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{currentGroup.scenario.passage}</p>
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
+            <div className="space-y-4">
+              {currentGroup.questions.map((question, index) => (
+                <QuestionCard
+                  key={question.id}
+                  question={question}
+                  selectedAnswer={answers[question.id]}
+                  onSelectAnswer={(answer) => setAnswer(question.id, answer)}
+                  showFeedback={quiz.instantFeedback && !!answers[question.id]}
+                  isMarkedForReview={markedForReview.includes(question.id)}
+                  onToggleMarkForReview={() => toggleMarkForReview(question.id)}
+                  themeColor={quiz.subject.themeColor}
+                  isSpeaking={isSpeaking}
+                  onSpeak={() => speak(question.questionText)}
+                  onStopSpeaking={stop}
+                  questionNumber={index + 1}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <QuestionCard
+            question={currentGroup.question}
+            selectedAnswer={answers[currentGroup.question.id]}
+            onSelectAnswer={(answer) => setAnswer(currentGroup.question.id, answer)}
+            showFeedback={quiz.instantFeedback && !!answers[currentGroup.question.id]}
+            isMarkedForReview={markedForReview.includes(currentGroup.question.id)}
+            onToggleMarkForReview={() => toggleMarkForReview(currentGroup.question.id)}
+            themeColor={quiz.subject.themeColor}
+            isSpeaking={isSpeaking}
+            onSpeak={() => speak(currentGroup.question.questionText)}
+            onStopSpeaking={stop}
+          />
         )}
-        
-        <QuestionCard
-          question={currentQuestion}
-          selectedAnswer={answers[currentQuestion.id]}
-          onSelectAnswer={(answer) => setAnswer(currentQuestion.id, answer)}
-          showFeedback={quiz.instantFeedback && !!answers[currentQuestion.id]}
-          isMarkedForReview={markedForReview.includes(currentQuestion.id)}
-          onToggleMarkForReview={() => toggleMarkForReview(currentQuestion.id)}
-          themeColor={quiz.subject.themeColor}
-          isSpeaking={isSpeaking}
-          onSpeak={() => speak(currentQuestion.questionText)}
-          onStopSpeaking={stop}
-        />
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4">
@@ -181,12 +248,12 @@ export default function QuizPage() {
           </Button>
           <Button
             onClick={handleNext}
-            disabled={!hasAnswer || submitQuizMutation.isPending}
+            disabled={!hasAllAnswers || submitQuizMutation.isPending}
             style={{ backgroundColor: `hsl(${quiz.subject.themeColor})`, color: 'white' }}
-            data-testid={isLastQuestion ? "button-submit" : "button-next"}
+            data-testid={isLastGroup ? "button-submit" : "button-next"}
           >
             {submitQuizMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLastQuestion ? (
+            {isLastGroup ? (
               <>
                 Submit Quiz
                 <Send className="ml-2 h-4 w-4" />

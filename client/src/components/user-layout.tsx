@@ -6,6 +6,7 @@ import { Home, User, LogIn, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { PhoneAuthModal } from "@/components/auth/phone-auth-modal";
+import logoImage from "@assets/Easyread IQ _logo (200 x 200 px)_1760451922039.png";
 
 interface UserLayoutProps {
   children: React.ReactNode;
@@ -21,7 +22,7 @@ export function UserLayout({ children }: UserLayoutProps) {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
         <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/">
-            <h1 className="text-xl md:text-2xl font-bold">Easyread IQ</h1>
+            <img src={logoImage} alt="Easyread IQ" className="h-10 md:h-12 w-auto" />
           </Link>
           <nav className="flex items-center gap-2">
             <Link href="/">

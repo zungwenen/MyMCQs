@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LayoutDashboard, BookOpen, Settings, LogOut, List } from "lucide-react";
 import { cn } from "@/lib/utils";
+import logoImage from "@assets/Easyread IQ _logo (200 x 200 px)_1760451922039.png";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -30,7 +31,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-6">
             <Link href="/admin/dashboard">
-              <h1 className="text-xl font-bold">Easyread IQ Admin</h1>
+              <div className="flex items-center gap-2">
+                <img src={logoImage} alt="Easyread IQ" className="h-9 w-auto" />
+                <span className="text-lg font-bold hidden sm:inline">Admin</span>
+              </div>
             </Link>
             <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => {

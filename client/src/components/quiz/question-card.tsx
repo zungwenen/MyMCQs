@@ -18,6 +18,7 @@ interface QuestionCardProps {
   isSpeaking: boolean;
   onSpeak: () => void;
   onStopSpeaking: () => void;
+  questionNumber?: number;
 }
 
 export function QuestionCard({
@@ -31,6 +32,7 @@ export function QuestionCard({
   isSpeaking,
   onSpeak,
   onStopSpeaking,
+  questionNumber,
 }: QuestionCardProps) {
   const options = question.options as string[];
   const [localAnswer, setLocalAnswer] = useState("");
@@ -100,7 +102,7 @@ export function QuestionCard({
             </Button>
           </div>
           <h2 className="text-base md:text-lg font-semibold leading-tight">
-            {question.questionText}
+            {questionNumber ? `${questionNumber}. ` : ""}{question.questionText}
           </h2>
         </div>
 
