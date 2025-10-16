@@ -637,11 +637,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         where: eq(schema.quizzes.id, quizId),
         with: {
           questions: true,
-          scenarios: {
-            with: {
-              questions: true,
-            },
-          },
           subject: true,
         },
       });
@@ -650,23 +645,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Quiz not found" });
       }
 
-      // Collect all questions: scenario questions + regular questions
-      const allQuestions: any[] = [];
-      
-      // Add scenario questions
-      quiz.scenarios?.forEach(scenario => {
-        if (scenario.questions) {
-          allQuestions.push(...scenario.questions);
-        }
-      });
-      
-      // Add regular questions (those without scenarioId)
-      quiz.questions?.filter(q => !q.scenarioId).forEach(question => {
-        allQuestions.push(question);
-      });
-
       let score = 0;
-      allQuestions.forEach((q) => {
+      quiz.questions.forEach((q) => {
         const userAnswer = answers[q.id];
         let isCorrect = false;
 
@@ -687,8 +667,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      const totalQuestions = allQuestions.length;
-      const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
+      const percentage = (score / quiz.questions.length) * 100;
       const passed = percentage >= quiz.passMarkPercentage;
 
       // Calculate IQ score
@@ -733,7 +712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         answers,
         markedForReview,
         score,
-        totalQuestions,
+        totalQuestions: quiz.questions.length,
         passed,
         iqScore,
         iqLabel,
