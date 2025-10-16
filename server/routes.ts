@@ -8,9 +8,9 @@ import bcrypt from "bcrypt";
 import { attachUser, requireUser, requireAdmin, createSessionToken, invalidateSession } from "./middleware/session";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-
+  
   app.use(attachUser);
-
+  
   // ===== SEED SUPER ADMIN (one-time) =====
   app.post("/api/seed-admin", async (req, res) => {
     try {
@@ -33,14 +33,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: error.message });
     }
   });
-
-  // ===== AUTHROUTES =====
-
+  
+  // ===== AUTH ROUTES =====
+  
   // Send OTP
   app.post("/api/auth/send-otp", async (req, res) => {
     try {
       const { phoneNumber } = req.body;
-
+      
       const existingUser = await db.query.users.findFirst({
         where: eq(schema.users.phoneNumber, phoneNumber),
       });
@@ -179,13 +179,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ===== ADMIN AUTH ROUTES =====
-
+  
   // Check if setup is needed (no admins exist)
   app.get("/api/admin/setup-needed", async (req, res) => {
     try {
       const adminCount = await db.select({ count: sql<number>`count(*)::int` })
         .from(schema.admins);
-
+      
       const needsSetup = adminCount[0].count === 0;
       res.json({ needsSetup });
     } catch (error: any) {
@@ -201,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if any admins already exist
       const adminCount = await db.select({ count: sql<number>`count(*)::int` })
         .from(schema.admins);
-
+      
       if (adminCount[0].count > 0) {
         return res.status(403).json({ message: "Setup already completed. Admins exist in the system." });
       }
@@ -271,14 +271,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Invalidate sessions server-side
     const userToken = req.cookies?.userToken;
     const adminToken = req.cookies?.adminToken;
-
+    
     if (userToken) {
       invalidateSession(userToken);
     }
     if (adminToken) {
       invalidateSession(adminToken);
     }
-
+    
     res.clearCookie('userToken');
     res.clearCookie('adminToken');
     res.json({ success: true });
@@ -320,16 +320,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ===== SUBJECT ROUTES =====
-
+  
   app.get("/api/subjects", async (req, res) => {
     try {
       const subjects = await db.query.subjects.findMany({
         with: {
-          quizzes: {
-            orderBy: (quizzes, { asc }) => [asc(quizzes.title)],
-          },
+          quizzes: true,
         },
-        orderBy: (subjects, { asc }) => [asc(subjects.name)],
       });
       res.json(subjects);
     } catch (error: any) {
@@ -383,8 +380,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ===== QUIZROUTES =====
-
+  // ===== QUIZ ROUTES =====
+  
   app.get("/api/quizzes/:id", requireUser, async (req, res) => {
     try {
       const quiz = await db.query.quizzes.findFirst({
@@ -488,11 +485,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/quizzes/:quizId/scenarios", requireAdmin, async (req, res) => {
     try {
       const { passage } = req.body;
-
+      
       const existingScenarios = await db.query.scenarios.findMany({
         where: eq(schema.scenarios.quizId, req.params.quizId),
       });
-
+      
       const orderIndex = existingScenarios.length;
 
       const [scenario] = await db.insert(schema.scenarios).values({
@@ -532,7 +529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/scenarios/:scenarioId/questions", requireAdmin, async (req, res) => {
     try {
       const { questionText, questionType, options, correctAnswer, explanation } = req.body;
-
+      
       // Get the scenario to know which quiz it belongs to
       const scenario = await db.query.scenarios.findFirst({
         where: eq(schema.scenarios.id, req.params.scenarioId),
@@ -541,12 +538,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!scenario) {
         return res.status(404).json({ message: "Scenario not found" });
       }
-
+      
       // Get existing questions for this scenario to calculate orderIndex
       const existingQuestions = await db.query.questions.findMany({
         where: eq(schema.questions.scenarioId, req.params.scenarioId),
       });
-
+      
       const orderIndex = existingQuestions.length;
 
       const [question] = await db.insert(schema.questions).values({
@@ -567,7 +564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ===== QUESTION ROUTES =====
-
+  
   app.get("/api/admin/questions/:quizId", requireAdmin, async (req, res) => {
     try {
       const questions = await db.query.questions.findMany({
@@ -583,11 +580,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/quizzes/:quizId/questions", requireAdmin, async (req, res) => {
     try {
       const { questionText, questionType, options, correctAnswer, explanation } = req.body;
-
+      
       const existingQuestions = await db.query.questions.findMany({
         where: eq(schema.questions.quizId, req.params.quizId),
       });
-
+      
       const orderIndex = existingQuestions.length;
 
       const [question] = await db.insert(schema.questions).values({
@@ -629,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ===== QUIZ ATTEMPT ROUTES =====
-
+  
   app.post("/api/quizzes/:id/submit", requireUser, async (req, res) => {
     try {
       const { answers, markedForReview, timeSpentSeconds } = req.body;
@@ -655,14 +652,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Collect all questions: scenario questions + regular questions
       const allQuestions: any[] = [];
-
+      
       // Add scenario questions
       quiz.scenarios?.forEach(scenario => {
         if (scenario.questions) {
           allQuestions.push(...scenario.questions);
         }
       });
-
+      
       // Add regular questions (those without scenarioId)
       quiz.questions?.filter(q => !q.scenarioId).forEach(question => {
         allQuestions.push(question);
@@ -724,7 +721,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const iqRange = matchingGrade.maxIQ - matchingGrade.minIQ;
           const scorePositionInRange = percentage - matchingGrade.minScorePercentage;
           const iqPositionInRange = (scorePositionInRange / scoreRange) * iqRange;
-
+          
           iqScore = Math.round(matchingGrade.minIQ + iqPositionInRange);
           iqLabel = matchingGrade.label;
         }
@@ -791,26 +788,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/quiz-attempts/user", requireUser, async (req, res) => {
-    try {
-      const userId = (req as any).userId;
-      const attempts = await db.query.quizAttempts.findMany({
-        where: eq(schema.quizAttempts.userId, userId),
-        with: {
-          quiz: {
-            with: {
-              subject: true,
-            },
-          },
-        },
-        orderBy: (attempts, { desc }) => [desc(attempts.completedAt)],
-      });
-      res.json(attempts);
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
-  });
-
   app.get("/api/admin/attempts", requireAdmin, async (req, res) => {
     try {
       const attempts = await db.query.quizAttempts.findMany({
@@ -823,7 +800,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ===== PAYMENT ROUTES =====
-
+  
   app.post("/api/payments/initialize", requireUser, async (req, res) => {
     try {
       const userId = (req as any).userId;
@@ -834,11 +811,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const settings = await db.query.paymentSettings.findFirst();
 
       const reference = `PAY_${Date.now()}_${userId}`;
-
+      
       // Build callback URL from APP_URL environment variable
       // APP_URL should be set to your domain (e.g., https://iq.easyread.ng)
       const appUrl = process.env.APP_URL;
-
+      
       let baseUrl: string;
       if (appUrl) {
         // Production/Custom domain: Use APP_URL
@@ -847,11 +824,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Fallback for local development
         baseUrl = 'http://localhost:5000';
       }
-
+      
       const url = new URL(baseUrl);
       url.pathname = '/payment-callback';
       const callbackUrl = url.toString();
-
+      
       // Initialize Paystack payment
       const paystackUrl = "https://api.paystack.co/transaction/initialize";
       const paystackData: any = {
@@ -944,7 +921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ===== PAYMENT SETTINGS ROUTES =====
-
+  
   app.get("/api/payment-settings", async (req, res) => {
     try {
       const settings = await db.query.paymentSettings.findFirst();
@@ -958,7 +935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { membershipPrice, paystackSplitCode } = req.body;
       const settings = await db.query.paymentSettings.findFirst();
-
+      
       let result;
       if (settings) {
         // Update existing settings
@@ -974,7 +951,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .returning();
         result = created;
       }
-
+      
       res.json(result);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -982,7 +959,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ===== IQ GRADES ROUTES =====
-
+  
   app.get("/api/admin/iq-grades", requireAdmin, async (req, res) => {
     try {
       const grades = await db.query.iqGrades.findMany({
@@ -1033,14 +1010,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { subjectId } = req.params;
       let grades;
-
+      
       if (subjectId) {
         // Get subject-specific grades first, then fall back to global
         grades = await db.query.iqGrades.findMany({
           where: eq(schema.iqGrades.subjectId, subjectId),
           orderBy: (grades, { asc }) => [asc(grades.minScorePercentage)],
         });
-
+        
         // If no subject-specific grades, get global ones
         if (grades.length === 0) {
           grades = await db.query.iqGrades.findMany({
@@ -1055,7 +1032,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           orderBy: (grades, { asc }) => [asc(grades.minScorePercentage)],
         });
       }
-
+      
       res.json(grades);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
