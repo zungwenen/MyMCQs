@@ -325,8 +325,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const subjects = await db.query.subjects.findMany({
         with: {
-          quizzes: true,
+          quizzes: {
+            orderBy: (quizzes, { asc }) => [asc(quizzes.title)],
+          },
         },
+        orderBy: (subjects, { asc }) => [asc(subjects.name)],
       });
       res.json(subjects);
     } catch (error: any) {
@@ -769,6 +772,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/quiz-attempts", requireUser, async (req, res) => {
+    try {
+      const userId = (req as any).userId;
+      const attempts = await db.query.quizAttempts.findMany({
+        where: eq(schema.quizAttempts.userId, userId),
+        with: {
+          quiz: {
+            with: {
+              subject: true,
+            },
+          },
+        },
+        orderBy: (attempts, { desc }) => [desc(attempts.completedAt)],
+      });
+      res.json(attempts);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/quiz-attempts/user", requireUser, async (req, res) => {
     try {
       const userId = (req as any).userId;
       const attempts = await db.query.quizAttempts.findMany({
