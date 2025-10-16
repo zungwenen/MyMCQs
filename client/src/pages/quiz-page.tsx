@@ -154,6 +154,24 @@ export default function QuizPage() {
   const currentGroup = questionGroups[currentQuestionIndex];
   const isLastGroup = currentQuestionIndex === questionGroups.length - 1;
 
+  // Calculate total individual questions for progress tracking
+  const totalIndividualQuestions = questionGroups.reduce((total, group) => {
+    if (group.type === 'scenario') {
+      return total + group.questions.length;
+    } else {
+      return total + 1;
+    }
+  }, 0);
+
+  // Calculate current question number for progress
+  const currentQuestionNumber = questionGroups.slice(0, currentQuestionIndex).reduce((total, group) => {
+    if (group.type === 'scenario') {
+      return total + group.questions.length;
+    } else {
+      return total + 1;
+    }
+  }, 0);
+
   // Check if current group has all answers
   let hasAllAnswers = false;
   if (currentGroup.type === 'scenario') {
@@ -173,8 +191,8 @@ export default function QuizPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background pb-24">
       <QuizProgress
-        currentQuestion={currentQuestionIndex}
-        totalQuestions={questionGroups.length}
+        currentQuestion={currentQuestionNumber}
+        totalQuestions={totalIndividualQuestions}
         timeRemaining={timeRemaining}
         timeLimitMinutes={quiz.timeLimitMinutes || undefined}
         themeColor={quiz.subject.themeColor}

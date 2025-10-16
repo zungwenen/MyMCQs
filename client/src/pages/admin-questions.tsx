@@ -29,6 +29,7 @@ export default function AdminQuestions() {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [editingScenario, setEditingScenario] = useState<Scenario | null>(null);
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
+  const [editingScenarioQuestion, setEditingScenarioQuestion] = useState<Question | null>(null);
   const [scenarioPassage, setScenarioPassage] = useState("");
   const [formData, setFormData] = useState({
     questionText: "",
@@ -133,7 +134,22 @@ export default function AdminQuestions() {
       setIsScenarioQuestionModalOpen(false);
       resetForm();
       setSelectedScenarioId(null);
+      setEditingScenarioQuestion(null);
       toast({ title: "Success", description: "Question added to scenario successfully" });
+    },
+  });
+
+  const updateScenarioQuestionMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      return await apiRequest("PATCH", `/api/admin/questions/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/scenarios", quizId] });
+      setIsScenarioQuestionModalOpen(false);
+      resetForm();
+      setSelectedScenarioId(null);
+      setEditingScenarioQuestion(null);
+      toast({ title: "Success", description: "Scenario question updated successfully" });
     },
   });
 
@@ -146,6 +162,7 @@ export default function AdminQuestions() {
       explanation: "",
     });
     setEditingQuestion(null);
+    setEditingScenarioQuestion(null);
   };
 
   const handleEdit = (question: Question) => {
@@ -169,6 +186,24 @@ export default function AdminQuestions() {
     setEditingScenario(scenario);
     setScenarioPassage(scenario.passage);
     setIsScenarioModalOpen(true);
+  };
+
+  const handleEditScenarioQuestion = (question: Question, scenarioId: string) => {
+    setEditingScenarioQuestion(question);
+    setSelectedScenarioId(scenarioId);
+    const options = question.options as string[];
+    setFormData({
+      questionText: question.questionText,
+      questionType: question.questionType as any,
+      options: question.questionType === "true_false" 
+        ? ["True", "False"] 
+        : question.questionType === "fill_in_gap"
+        ? options
+        : options,
+      correctAnswer: question.correctAnswer,
+      explanation: question.explanation || "",
+    });
+    setIsScenarioQuestionModalOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -234,7 +269,11 @@ export default function AdminQuestions() {
       };
     }
 
-    createScenarioQuestionMutation.mutate({ scenarioId: selectedScenarioId, data });
+    if (editingScenarioQuestion) {
+      updateScenarioQuestionMutation.mutate({ id: editingScenarioQuestion.id, data });
+    } else {
+      createScenarioQuestionMutation.mutate({ scenarioId: selectedScenarioId, data });
+    }
   };
 
   const handleQuestionTypeChange = (type: string) => {
@@ -449,15 +488,25 @@ export default function AdminQuestions() {
                                     <CardTitle className="text-sm">
                                       Q{qIndex + 1}. {question.questionText}
                                     </CardTitle>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => deleteMutation.mutate(question.id)}
-                                      disabled={deleteMutation.isPending}
-                                      data-testid={`button-delete-scenario-question-${question.id}`}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEditScenarioQuestion(question, scenario.id)}
+                                        data-testid={`button-edit-scenario-question-${question.id}`}
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteMutation.mutate(question.id)}
+                                        disabled={deleteMutation.isPending}
+                                        data-testid={`button-delete-scenario-question-${question.id}`}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
                                   </div>
                                   <CardDescription className="text-xs">
                                     {question.questionType === "true_false" ? "True/False" : question.questionType === "fill_in_gap" ? "Fill in the Gap" : "Multiple Choice"}
@@ -738,13 +787,14 @@ export default function AdminQuestions() {
         if (!open) { 
           resetForm(); 
           setSelectedScenarioId(null);
+          setEditingScenarioQuestion(null);
         } 
       }}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add Question to Scenario</DialogTitle>
+            <DialogTitle>{editingScenarioQuestion ? "Edit Scenario Question" : "Add Question to Scenario"}</DialogTitle>
             <DialogDescription>
-              Create a new question for this scenario
+              {editingScenarioQuestion ? "Update scenario question details" : "Create a new question for this scenario"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleScenarioQuestionSubmit} className="space-y-4">
@@ -882,6 +932,7 @@ export default function AdminQuestions() {
                   setIsScenarioQuestionModalOpen(false); 
                   resetForm(); 
                   setSelectedScenarioId(null);
+                  setEditingScenarioQuestion(null);
                 }}
                 className="flex-1"
               >
@@ -889,14 +940,14 @@ export default function AdminQuestions() {
               </Button>
               <Button
                 type="submit"
-                disabled={createScenarioQuestionMutation.isPending}
+                disabled={createScenarioQuestionMutation.isPending || updateScenarioQuestionMutation.isPending}
                 className="flex-1"
                 data-testid="button-submit-scenario-question"
               >
-                {createScenarioQuestionMutation.isPending && (
+                {(createScenarioQuestionMutation.isPending || updateScenarioQuestionMutation.isPending) && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Add Question
+                {editingScenarioQuestion ? "Update" : "Add Question"}
               </Button>
             </div>
           </form>
