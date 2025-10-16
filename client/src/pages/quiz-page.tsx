@@ -359,6 +359,10 @@ type QuestionGroup = {
   type: 'single';
   question: Question;
 };
+
+export default function QuizPage() {
+  const { id } = useParams();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { speak, stop, isSpeaking } = useTTS();
   
