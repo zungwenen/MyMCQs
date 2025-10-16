@@ -20,6 +20,7 @@ type QuizWithScenarios = Quiz & {
   scenarios?: (Scenario & { questions?: Question[] })[];
 };
 
+// Group questions: scenarios come first, then individual questions
 export default function QuizPage() {
   const { quizId } = useParams();
   const [, setLocation] = useLocation();
@@ -38,35 +39,29 @@ export default function QuizPage() {
 
   const [timeRemaining, setTimeRemaining] = useState<number | undefined>();
 
-  const { data: quiz, isLoading, error } = useQuery<QuizWithScenarios>({
-    queryKey: [`/api/quizzes/${quizId}`],
+  const { data: quiz, isLoading } = useQuery<QuizWithScenarios>({
+    queryKey: ["/api/quizzes", quizId],
     enabled: !!quizId,
   });
 
   // Flatten all questions: scenario questions first, then regular questions
   const allQuestions: (Question & { scenarioPassage?: string })[] = [];
-
+  
   if (quiz) {
     // Add scenario questions with their passages
-    if (quiz.scenarios && Array.isArray(quiz.scenarios)) {
-      quiz.scenarios.forEach(scenario => {
-        if (scenario.questions && Array.isArray(scenario.questions)) {
-          scenario.questions.forEach(question => {
-            allQuestions.push({
-              ...question,
-              scenarioPassage: scenario.passage
-            });
-          });
-        }
+    quiz.scenarios?.forEach(scenario => {
+      scenario.questions?.forEach(question => {
+        allQuestions.push({
+          ...question,
+          scenarioPassage: scenario.passage
+        });
       });
-    }
-
+    });
+    
     // Add regular questions (those without scenarioId)
-    if (quiz.questions && Array.isArray(quiz.questions)) {
-      quiz.questions.filter(q => !q.scenarioId).forEach(question => {
-        allQuestions.push(question);
-      });
-    }
+    quiz.questions?.filter(q => !q.scenarioId).forEach(question => {
+      allQuestions.push(question);
+    });
   }
 
   const currentQuestion = allQuestions[currentQuestionIndex];
@@ -152,19 +147,19 @@ export default function QuizPage() {
 
   const handleSpeak = () => {
     if (!currentQuestion) return;
-
+    
     let textToSpeak = currentQuestion.questionText;
-
+    
     // Add scenario passage if present
     if (currentQuestion.scenarioPassage) {
       textToSpeak = `Passage: ${currentQuestion.scenarioPassage}. Question: ${textToSpeak}`;
     }
-
+    
     if (currentQuestion.questionType !== "fill_in_gap") {
       const options = currentQuestion.options as string[];
       textToSpeak += `. Options: ${options.join(", ")}`;
     }
-
+    
     speak(textToSpeak);
   };
 
@@ -176,40 +171,10 @@ export default function QuizPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-destructive mb-2">Error loading quiz</p>
-          <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!quiz) {
+  if (!quiz || !currentQuestion) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-muted-foreground">Quiz not found</p>
-      </div>
-    );
-  }
-
-  if (allQuestions.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-2">This quiz has no questions yet</p>
-          <Button onClick={() => setLocation('/dashboard')}>Back to Dashboard</Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentQuestion) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground">Question not found</p>
       </div>
     );
   }
@@ -382,6 +347,256 @@ export default function QuizPage() {
         </div>
       </div>
 
+      <Footer />
+    </div>
+  );
+}
+type QuestionGroup = {
+  type: 'scenario';
+  scenario: Scenario;
+  questions: Question[];
+} | {
+  type: 'single';
+  question: Question;
+};
+
+export default function QuizPage() {
+  const { id } = useParams();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const { speak, stop, isSpeaking } = useTTS();
+  
+  const {
+    currentQuestionIndex,
+    answers,
+    markedForReview,
+    setCurrentQuestionIndex,
+    setAnswer,
+    toggleMarkForReview,
+    startQuiz,
+    resetQuiz,
+    getTimeSpent,
+  } = useQuizStore();
+
+  const [timeRemaining, setTimeRemaining] = useState<number | undefined>();
+
+  const { data: quiz, isLoading: loadingQuiz } = useQuery<QuizWithScenarios>({
+    queryKey: ["/api/quizzes", id],
+  });
+
+  const submitQuizMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/quizzes/${id}/submit`, {
+        answers,
+        markedForReview,
+        timeSpentSeconds: getTimeSpent(),
+      });
+      return res;
+    },
+    onSuccess: (data) => {
+      resetQuiz();
+      queryClient.invalidateQueries({ queryKey: ["/api/quiz-attempts"] });
+      setLocation(`/results/${data.attemptId}`);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit quiz",
+        variant: "destructive",
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (quiz && !timeRemaining) {
+      startQuiz();
+      if (quiz.timeLimitMinutes) {
+        setTimeRemaining(quiz.timeLimitMinutes * 60);
+      }
+    }
+  }, [quiz]);
+
+  useEffect(() => {
+    if (timeRemaining === undefined || timeRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev === undefined || prev <= 1) {
+          clearInterval(timer);
+          submitQuizMutation.mutate();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining]);
+
+  if (loadingQuiz) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!quiz || !quiz.questions || quiz.questions.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Quiz not found</p>
+      </div>
+    );
+  }
+
+  // Group questions by scenario or as individual questions
+  const questionGroups: QuestionGroup[] = [];
+  const processedScenarios = new Set<string>();
+  
+  quiz.questions.forEach((question) => {
+    if (question.scenarioId && !processedScenarios.has(question.scenarioId)) {
+      // Find scenario and all its questions
+      const scenario = quiz.scenarios?.find(s => s.id === question.scenarioId);
+      if (scenario) {
+        const scenarioQuestions = quiz.questions.filter(q => q.scenarioId === question.scenarioId);
+        questionGroups.push({
+          type: 'scenario',
+          scenario,
+          questions: scenarioQuestions,
+        });
+        processedScenarios.add(question.scenarioId);
+      } else {
+        // Fallback: Scenario object missing, treat as individual question
+        questionGroups.push({
+          type: 'single',
+          question,
+        });
+      }
+    } else if (!question.scenarioId) {
+      // Individual question
+      questionGroups.push({
+        type: 'single',
+        question,
+      });
+    }
+  });
+
+  const currentGroup = questionGroups[currentQuestionIndex];
+  const isLastGroup = currentQuestionIndex === questionGroups.length - 1;
+
+  // Check if current group has all answers
+  let hasAllAnswers = false;
+  if (currentGroup.type === 'scenario') {
+    hasAllAnswers = currentGroup.questions.every(q => !!answers[q.id]);
+  } else {
+    hasAllAnswers = !!answers[currentGroup.question.id];
+  }
+
+  const handleNext = () => {
+    if (isLastGroup) {
+      submitQuizMutation.mutate();
+    } else {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background pb-24">
+      <QuizProgress
+        currentQuestion={currentQuestionIndex}
+        totalQuestions={questionGroups.length}
+        timeRemaining={timeRemaining}
+        timeLimitMinutes={quiz.timeLimitMinutes || undefined}
+        themeColor={quiz.subject.themeColor}
+      />
+
+      <div className="max-w-4xl mx-auto px-4 pt-24 pb-8 space-y-4">
+        {currentGroup.type === 'scenario' ? (
+          <div className="space-y-4">
+            <Accordion type="single" collapsible defaultValue="scenario" className="w-full">
+              <AccordionItem value="scenario">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" style={{ color: `hsl(${quiz.subject.themeColor})` }} />
+                    <span className="font-semibold">Read this scenario and answer the questions that follow.</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{currentGroup.scenario.passage}</p>
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
+            <div className="space-y-4">
+              {currentGroup.questions.map((question, index) => (
+                <QuestionCard
+                  key={question.id}
+                  question={question}
+                  selectedAnswer={answers[question.id]}
+                  onSelectAnswer={(answer) => setAnswer(question.id, answer)}
+                  showFeedback={quiz.instantFeedback && !!answers[question.id]}
+                  isMarkedForReview={markedForReview.includes(question.id)}
+                  onToggleMarkForReview={() => toggleMarkForReview(question.id)}
+                  themeColor={quiz.subject.themeColor}
+                  isSpeaking={isSpeaking}
+                  onSpeak={() => speak(question.questionText)}
+                  onStopSpeaking={stop}
+                  questionNumber={index + 1}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <QuestionCard
+            question={currentGroup.question}
+            selectedAnswer={answers[currentGroup.question.id]}
+            onSelectAnswer={(answer) => setAnswer(currentGroup.question.id, answer)}
+            showFeedback={quiz.instantFeedback && !!answers[currentGroup.question.id]}
+            isMarkedForReview={markedForReview.includes(currentGroup.question.id)}
+            onToggleMarkForReview={() => toggleMarkForReview(currentGroup.question.id)}
+            themeColor={quiz.subject.themeColor}
+            isSpeaking={isSpeaking}
+            onSpeak={() => speak(currentGroup.question.questionText)}
+            onStopSpeaking={stop}
+          />
+        )}
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4">
+        <div className="max-w-4xl mx-auto flex justify-between gap-4">
+          <Button
+            variant="outline"
+            onClick={() => currentQuestionIndex > 0 && setCurrentQuestionIndex(currentQuestionIndex - 1)}
+            disabled={currentQuestionIndex === 0}
+            data-testid="button-previous"
+          >
+            Previous
+          </Button>
+          <Button
+            onClick={handleNext}
+            disabled={!hasAllAnswers || submitQuizMutation.isPending}
+            style={{ backgroundColor: `hsl(${quiz.subject.themeColor})`, color: 'white' }}
+            data-testid={isLastGroup ? "button-submit" : "button-next"}
+          >
+            {submitQuizMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLastGroup ? (
+              <>
+                Submit Quiz
+                <Send className="ml-2 h-4 w-4" />
+              </>
+            ) : (
+              <>
+                Next
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
       <Footer />
     </div>
   );
