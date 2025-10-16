@@ -401,8 +401,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
         },
       });
+
+      if (!quiz) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+
       res.json(quiz);
     } catch (error: any) {
+      console.error("Error fetching quiz:", error);
       res.status(500).json({ message: error.message });
     }
   });

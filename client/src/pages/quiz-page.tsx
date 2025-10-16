@@ -38,8 +38,8 @@ export default function QuizPage() {
 
   const [timeRemaining, setTimeRemaining] = useState<number | undefined>();
 
-  const { data: quiz, isLoading } = useQuery<QuizWithScenarios>({
-    queryKey: ["/api/quizzes", quizId],
+  const { data: quiz, isLoading, error } = useQuery<QuizWithScenarios>({
+    queryKey: [`/api/quizzes/${quizId}`],
     enabled: !!quizId,
   });
 
@@ -48,19 +48,25 @@ export default function QuizPage() {
 
   if (quiz) {
     // Add scenario questions with their passages
-    quiz.scenarios?.forEach(scenario => {
-      scenario.questions?.forEach(question => {
-        allQuestions.push({
-          ...question,
-          scenarioPassage: scenario.passage
-        });
+    if (quiz.scenarios && Array.isArray(quiz.scenarios)) {
+      quiz.scenarios.forEach(scenario => {
+        if (scenario.questions && Array.isArray(scenario.questions)) {
+          scenario.questions.forEach(question => {
+            allQuestions.push({
+              ...question,
+              scenarioPassage: scenario.passage
+            });
+          });
+        }
       });
-    });
+    }
 
     // Add regular questions (those without scenarioId)
-    quiz.questions?.filter(q => !q.scenarioId).forEach(question => {
-      allQuestions.push(question);
-    });
+    if (quiz.questions && Array.isArray(quiz.questions)) {
+      quiz.questions.filter(q => !q.scenarioId).forEach(question => {
+        allQuestions.push(question);
+      });
+    }
   }
 
   const currentQuestion = allQuestions[currentQuestionIndex];
@@ -170,10 +176,40 @@ export default function QuizPage() {
     );
   }
 
-  if (!quiz || !currentQuestion) {
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-destructive mb-2">Error loading quiz</p>
+          <p className="text-sm text-muted-foreground">{(error as Error).message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!quiz) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-muted-foreground">Quiz not found</p>
+      </div>
+    );
+  }
+
+  if (allQuestions.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-2">This quiz has no questions yet</p>
+          <Button onClick={() => setLocation('/dashboard')}>Back to Dashboard</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentQuestion) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-muted-foreground">Question not found</p>
       </div>
     );
   }
