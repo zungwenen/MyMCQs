@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LayoutDashboard, BookOpen, Settings, LogOut, List } from "lucide-react";
 import { cn } from "@/lib/utils";
-import logoImage from "@assets/Easyread IQ _logo (200 x 200 px)_1760451922039.png";
+import logoImage from "@assets/Easyread IQ _logo (512x512 px)_1760781141490.png";
 
 interface AdminLayoutProps {
   children: React.ReactNode;

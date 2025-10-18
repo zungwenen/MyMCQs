@@ -6,7 +6,7 @@ import { Home, User, LogIn, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { PhoneAuthModal } from "@/components/auth/phone-auth-modal";
-import logoImage from "@assets/Easyread IQ _logo (200 x 200 px)_1760451922039.png";
+import logoImage from "@assets/Easyread IQ _logo (512x512 px)_1760781141490.png";
 
 interface UserLayoutProps {
   children: React.ReactNode;
