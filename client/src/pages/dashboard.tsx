@@ -55,8 +55,7 @@ export default function Dashboard() {
                   <span className="text-primary">Smart MCQ Practice</span>
                 </h1>
                 <p className="text-base md:text-lg text-muted-foreground mb-6">
-                  Elevate your legal knowledge with expertly crafted multiple-choice questions. 
-                  Track your progress, assess your IQ, and ace your law exams with confidence.
+                  EasyRead IQ is your ultimate tool to test and sharpen your knowledge on Nigerian Law School modules and real-life legal issues. Designed for law aspirants and practitioners, it challenges your understanding through intelligent questions, model-based assessments, and instant feedback. With a one-time lifetime access, EasyRead IQ makes learning the law smarter, faster, and more engaging.
                 </p>
 
                 {/* Key Features */}
