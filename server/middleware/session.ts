@@ -7,14 +7,7 @@ import crypto from 'crypto';
 // Secret key for signing session tokens (in production, use environment variable)
 const SESSION_SECRET = process.env.SESSION_SECRET || '152941180b431b30e2f66cb969f511d37d292c23d6c2f78771886d7230abe5df';
 
-// In-memory session store (in production, use Redis or database table)
-const sessionStore = new Map<string, {
-  userId?: string;
-  adminId?: string;
-  createdAt: number;
-}>();
-
-export function createSessionToken(id: string, type: 'user' | 'admin'): string {
+export async function createSessionToken(id: string, type: 'user' | 'admin'): Promise<string> {
   const sessionId = crypto.randomBytes(32).toString('hex');
   const timestamp = Date.now();
   const payload = `${sessionId}:${id}:${type}:${timestamp}`;
@@ -23,16 +16,16 @@ export function createSessionToken(id: string, type: 'user' | 'admin'): string {
     .update(payload)
     .digest('hex');
   
-  // Store session
-  sessionStore.set(sessionId, {
+  // Store session in database
+  await db.insert(schema.sessions).values({
+    id: sessionId,
     [type === 'user' ? 'userId' : 'adminId']: id,
-    createdAt: timestamp,
   });
   
   return `${payload}.${signature}`;
 }
 
-function validateSessionToken(token: string): { sessionId: string; id: string; type: 'user' | 'admin'; timestamp: number } | null {
+async function validateSessionToken(token: string): Promise<{ sessionId: string; id: string; type: 'user' | 'admin'; timestamp: number } | null> {
   try {
     const [payload, signature] = token.split('.');
     if (!payload || !signature) return null;
@@ -48,8 +41,10 @@ function validateSessionToken(token: string): { sessionId: string; id: string; t
     const [sessionId, id, type, timestamp] = payload.split(':');
     if (!sessionId || !id || !type || !timestamp) return null;
     
-    // Check if session exists in store
-    const session = sessionStore.get(sessionId);
+    // Check if session exists in database
+    const session = await db.query.sessions.findFirst({
+      where: eq(schema.sessions.id, sessionId),
+    });
     if (!session) return null;
     
     return {
@@ -63,10 +58,10 @@ function validateSessionToken(token: string): { sessionId: string; id: string; t
   }
 }
 
-export function invalidateSession(token: string) {
-  const validated = validateSessionToken(token);
+export async function invalidateSession(token: string) {
+  const validated = await validateSessionToken(token);
   if (validated) {
-    sessionStore.delete(validated.sessionId);
+    await db.delete(schema.sessions).where(eq(schema.sessions.id, validated.sessionId));
   }
 }
 
@@ -77,7 +72,7 @@ export async function attachUser(req: Request, res: Response, next: NextFunction
     const adminToken = req.cookies?.adminToken;
     
     if (userToken) {
-      const validated = validateSessionToken(userToken);
+      const validated = await validateSessionToken(userToken);
       if (validated && validated.type === 'user') {
         const tokenAge = Date.now() - validated.timestamp;
         
@@ -92,19 +87,19 @@ export async function attachUser(req: Request, res: Response, next: NextFunction
             (req as any).user = user;
           } else {
             // User no longer exists or not verified, invalidate session
-            invalidateSession(userToken);
+            await invalidateSession(userToken);
             res.clearCookie('userToken');
           }
         } else {
           // Token expired, invalidate session
-          invalidateSession(userToken);
+          await invalidateSession(userToken);
           res.clearCookie('userToken');
         }
       }
     }
     
     if (adminToken) {
-      const validated = validateSessionToken(adminToken);
+      const validated = await validateSessionToken(adminToken);
       if (validated && validated.type === 'admin') {
         const tokenAge = Date.now() - validated.timestamp;
         
@@ -119,12 +114,12 @@ export async function attachUser(req: Request, res: Response, next: NextFunction
             (req as any).admin = admin;
           } else {
             // Admin no longer exists, invalidate session
-            invalidateSession(adminToken);
+            await invalidateSession(adminToken);
             res.clearCookie('adminToken');
           }
         } else {
           // Token expired, invalidate session
-          invalidateSession(adminToken);
+          await invalidateSession(adminToken);
           res.clearCookie('adminToken');
         }
       }

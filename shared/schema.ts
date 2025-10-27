@@ -33,6 +33,14 @@ export const otpSessions = pgTable("otp_sessions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Sessions - for persistent user/admin authentication
+export const sessions = pgTable("sessions", {
+  id: varchar("id").primaryKey(), // sessionId from token
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  adminId: varchar("admin_id").references(() => admins.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Subjects - container for quizzes
 export const subjects = pgTable("subjects", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -131,6 +139,7 @@ export const iqGrades = pgTable("iq_grades", {
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertAdminSchema = createInsertSchema(admins).omit({ id: true, createdAt: true });
 export const insertOtpSessionSchema = createInsertSchema(otpSessions).omit({ id: true, createdAt: true });
+export const insertSessionSchema = createInsertSchema(sessions).omit({ createdAt: true });
 export const insertSubjectSchema = createInsertSchema(subjects).omit({ id: true, createdAt: true });
 export const insertQuizSchema = createInsertSchema(quizzes).omit({ id: true, createdAt: true });
 export const insertScenarioSchema = createInsertSchema(scenarios).omit({ id: true, createdAt: true });
@@ -149,6 +158,9 @@ export type InsertAdmin = z.infer<typeof insertAdminSchema>;
 
 export type OtpSession = typeof otpSessions.$inferSelect;
 export type InsertOtpSession = z.infer<typeof insertOtpSessionSchema>;
+
+export type Session = typeof sessions.$inferSelect;
+export type InsertSession = z.infer<typeof insertSessionSchema>;
 
 export type Subject = typeof subjects.$inferSelect;
 export type InsertSubject = z.infer<typeof insertSubjectSchema>;
