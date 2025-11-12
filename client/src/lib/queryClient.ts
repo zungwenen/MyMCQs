@@ -93,7 +93,15 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: true,
       staleTime: 0,
-      retry: false,
+      retry: (failureCount, error: any) => {
+        const is401 = error?.message?.includes('Unauthorized');
+        const isUserLogin = error?.message?.includes('user login required');
+        if (is401 && !isUserLogin && failureCount < 2) {
+          return true;
+        }
+        return false;
+      },
+      retryDelay: (attemptIndex) => Math.min(300 * Math.pow(2, attemptIndex), 800),
     },
     mutations: {
       retry: false,

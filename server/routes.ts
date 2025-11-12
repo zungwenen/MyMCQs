@@ -114,7 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Set httpOnly cookie for session with signed token
-      const userToken = createSessionToken(user.id, 'user');
+      const userToken = await createSessionToken(user.id, 'user');
       res.cookie('userToken', userToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -147,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Set httpOnly cookie for session with signed token
-      const userToken = createSessionToken(user.id, 'user');
+      const userToken = await createSessionToken(user.id, 'user');
       res.cookie('userToken', userToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -245,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Set httpOnly cookie for admin session with signed token
-      const adminToken = createSessionToken(admin.id, 'admin');
+      const adminToken = await createSessionToken(admin.id, 'admin');
       res.cookie('adminToken', adminToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
