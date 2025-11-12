@@ -890,7 +890,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/payments", requireAdmin, async (req, res) => {
     try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const cursor = req.query.cursor as string;
+      const statusFilter = req.query.status as string;
+      const fromDate = req.query.from as string;
+      const toDate = req.query.to as string;
+
+      let cursorPayment = null;
+      if (cursor) {
+        if (!cursor || cursor.length < 10) {
+          return res.status(400).json({ message: "Invalid cursor format" });
+        }
+        
+        cursorPayment = await db.query.payments.findFirst({
+          where: eq(schema.payments.id, cursor),
+        });
+        
+        if (!cursorPayment) {
+          return res.status(400).json({ message: "Invalid cursor - payment not found" });
+        }
+      }
+
+      const filterConditions = [];
+      
+      if (statusFilter && ['pending', 'success', 'failed'].includes(statusFilter)) {
+        filterConditions.push(eq(schema.payments.status, statusFilter as any));
+      }
+      
+      if (fromDate) {
+        filterConditions.push(sql`${schema.payments.createdAt} >= ${new Date(fromDate)}`);
+      }
+      
+      if (toDate) {
+        const endOfDay = new Date(toDate);
+        endOfDay.setDate(endOfDay.getDate() + 1);
+        filterConditions.push(sql`${schema.payments.createdAt} < ${endOfDay}`);
+      }
+
+      const paginationConditions = [...filterConditions];
+      if (cursorPayment) {
+        paginationConditions.push(
+          sql`(${schema.payments.createdAt}, ${schema.payments.id}) < (${cursorPayment.createdAt}, ${cursorPayment.id})`
+        );
+      }
+
+      const filterClause = filterConditions.length > 0 ? and(...filterConditions) : undefined;
+      const paginationClause = paginationConditions.length > 0 ? and(...paginationConditions) : undefined;
+
       const payments = await db.query.payments.findMany({
+        ...(paginationClause && { where: paginationClause }),
         with: {
           user: {
             columns: {
@@ -899,9 +947,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
           },
         },
-        orderBy: (payments, { desc }) => [desc(payments.createdAt)],
+        orderBy: (payments, { desc }) => [desc(payments.createdAt), desc(payments.id)],
+        limit: limit + 1,
       });
-      res.json(payments);
+
+      const hasMore = payments.length > limit;
+      const items = hasMore ? payments.slice(0, limit) : payments;
+      const nextCursor = hasMore && items.length > 0
+        ? items[items.length - 1].id
+        : null;
+
+      const totalQuery = db.select({ count: sql<number>`count(*)::int` })
+        .from(schema.payments);
+      const [totalResult] = filterClause 
+        ? await totalQuery.where(filterClause)
+        : await totalQuery;
+
+      const statusCountsQuery = db.select({
+        status: schema.payments.status,
+        count: sql<number>`count(*)::int`,
+      })
+        .from(schema.payments);
+      
+      const statusCounts = filterClause
+        ? await statusCountsQuery.where(filterClause).groupBy(schema.payments.status)
+        : await statusCountsQuery.groupBy(schema.payments.status);
+
+      const countsMap = {
+        pending: 0,
+        success: 0,
+        failed: 0,
+      };
+      
+      statusCounts.forEach((row) => {
+        countsMap[row.status as keyof typeof countsMap] = row.count;
+      });
+
+      const successCondition = eq(schema.payments.status, 'success');
+      const revenueWhereClause = filterClause 
+        ? and(filterClause, successCondition)
+        : successCondition;
+      
+      const [revenueResult] = await db.select({
+        totalRevenue: sql<number>`COALESCE(SUM(amount), 0)::bigint`,
+      })
+        .from(schema.payments)
+        .where(revenueWhereClause);
+
+      res.json({
+        items,
+        nextCursor,
+        hasMore,
+        totalCount: totalResult.count,
+        statusCounts: countsMap,
+        totalRevenue: parseInt(revenueResult.totalRevenue.toString()),
+      });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
