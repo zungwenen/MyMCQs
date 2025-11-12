@@ -7,27 +7,32 @@ async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     if (res.status === 401) {
       if (typeof window !== 'undefined') {
-        if (handle401Timeout) {
-          clearTimeout(handle401Timeout);
-        }
-        handle401Timeout = setTimeout(async () => {
-          const { useAuthStore } = await import('@/store/auth');
-          const store = useAuthStore.getState();
-          
-          store.clearAuth();
-          queryClient.clear();
-          
-          if (store.user || store.admin || store.isHydrated) {
-            window.location.href = '/';
-            toast({
-              title: "Session Expired",
-              description: "Please log in again",
-              variant: "destructive",
-            });
+        const url = res.url;
+        const isAuthEndpoint = url.includes('/api/auth/me') || url.includes('/api/admin/me');
+        
+        if (isAuthEndpoint) {
+          if (handle401Timeout) {
+            clearTimeout(handle401Timeout);
           }
-          
-          handle401Timeout = null;
-        }, 100);
+          handle401Timeout = setTimeout(async () => {
+            const { useAuthStore } = await import('@/store/auth');
+            const store = useAuthStore.getState();
+            
+            store.clearAuth();
+            queryClient.clear();
+            
+            if (store.user || store.admin || store.isHydrated) {
+              window.location.href = '/';
+              toast({
+                title: "Session Expired",
+                description: "Please log in again",
+                variant: "destructive",
+              });
+            }
+            
+            handle401Timeout = null;
+          }, 100);
+        }
       }
     }
     
