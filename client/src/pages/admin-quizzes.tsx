@@ -43,6 +43,7 @@ export default function AdminQuizzes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/quizzes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subjects"] });
       setIsModalOpen(false);
       resetForm();
       toast({ title: "Success", description: "Quiz created successfully" });
@@ -58,6 +59,7 @@ export default function AdminQuizzes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/quizzes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subjects"] });
       setIsModalOpen(false);
       resetForm();
       toast({ title: "Success", description: "Quiz updated successfully" });
@@ -73,6 +75,7 @@ export default function AdminQuizzes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/quizzes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subjects"] });
       toast({ title: "Success", description: "Quiz deleted successfully" });
     },
     onError: (error: any) => {

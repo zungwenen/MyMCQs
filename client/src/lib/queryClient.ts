@@ -1,17 +1,43 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 
+let handle401Timeout: ReturnType<typeof setTimeout> | null = null;
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    if (res.status === 401) {
+      if (typeof window !== 'undefined') {
+        if (handle401Timeout) {
+          clearTimeout(handle401Timeout);
+        }
+        handle401Timeout = setTimeout(async () => {
+          const { useAuthStore } = await import('@/store/auth');
+          const store = useAuthStore.getState();
+          
+          store.clearAuth();
+          queryClient.clear();
+          
+          if (store.user || store.admin || store.isHydrated) {
+            window.location.href = '/';
+            toast({
+              title: "Session Expired",
+              description: "Please log in again",
+              variant: "destructive",
+            });
+          }
+          
+          handle401Timeout = null;
+        }, 100);
+      }
+    }
+    
     const text = (await res.text()) || res.statusText;
     let errorMessage = text;
     
-    // Try to parse JSON error message
     try {
       const json = JSON.parse(text);
       errorMessage = json.message || json.error || text;
     } catch {
-      // Use text as-is if not JSON
     }
     
     throw new Error(errorMessage);
@@ -60,14 +86,13 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      refetchOnWindowFocus: true,
+      staleTime: 0,
       retry: false,
     },
     mutations: {
       retry: false,
       onError: (error: any) => {
-        // Global error handler for mutations
         const message = error?.message || "An unexpected error occurred";
         toast({
           title: "Error",

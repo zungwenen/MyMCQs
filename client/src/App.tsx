@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useAuthStore } from "@/store/auth";
+import { useEffect, useState } from "react";
 
 import { UserLayout } from "@/components/user-layout";
 import { AdminLayout } from "@/components/admin/admin-layout";
@@ -77,7 +78,47 @@ function Router() {
 }
 
 function App() {
-  const { admin } = useAuthStore();
+  const { admin, user, clearAuth, isHydrated } = useAuthStore();
+  const [sessionChecked, setSessionChecked] = useState(false);
+
+  useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
+    const verifySession = async () => {
+      if (!user && !admin) {
+        setSessionChecked(true);
+        return;
+      }
+
+      try {
+        const endpoint = admin ? '/api/admin/me' : '/api/auth/me';
+        const res = await fetch(endpoint, { credentials: 'include' });
+        
+        if (!res.ok) {
+          clearAuth();
+          queryClient.clear();
+        }
+      } catch (error) {
+        console.error('Session verification failed:', error);
+        clearAuth();
+        queryClient.clear();
+      } finally {
+        setSessionChecked(true);
+      }
+    };
+
+    verifySession();
+  }, [isHydrated, user, admin, clearAuth]);
+
+  if (!isHydrated || !sessionChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

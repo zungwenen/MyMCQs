@@ -8,9 +8,12 @@ interface AuthState {
   admin: Admin | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isHydrated: boolean;
   setUser: (user: User | null) => void;
   setAdmin: (admin: Admin | null) => void;
   logout: () => Promise<void>;
+  clearAuth: () => void;
+  setHydrated: (hydrated: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -20,6 +23,7 @@ export const useAuthStore = create<AuthState>()(
       admin: null,
       isAuthenticated: false,
       isAdmin: false,
+      isHydrated: false,
       setUser: (user) => set({ user, isAuthenticated: !!user, admin: null, isAdmin: false }),
       setAdmin: (admin) => set({ admin, isAdmin: !!admin, user: null, isAuthenticated: false }),
       logout: async () => {
@@ -31,9 +35,19 @@ export const useAuthStore = create<AuthState>()(
           set({ user: null, admin: null, isAuthenticated: false, isAdmin: false });
         }
       },
+      clearAuth: () => {
+        set({ user: null, admin: null, isAuthenticated: false, isAdmin: false });
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('auth-storage');
+        }
+      },
+      setHydrated: (hydrated) => set({ isHydrated: hydrated }),
     }),
     {
       name: 'auth-storage',
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated(true);
+      },
     }
   )
 );
