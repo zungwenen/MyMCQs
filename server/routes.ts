@@ -891,9 +891,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/payments", requireAdmin, async (req, res) => {
     try {
       const payments = await db.query.payments.findMany({
+        with: {
+          user: {
+            columns: {
+              phoneNumber: true,
+              name: true,
+            },
+          },
+        },
         orderBy: (payments, { desc }) => [desc(payments.createdAt)],
       });
       res.json(payments);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.patch("/api/admin/payments/:id", requireAdmin, async (req, res) => {
+    try {
+      const { status } = req.body;
+      
+      if (!status || !['pending', 'success', 'failed'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'pending', 'success', or 'failed'" });
+      }
+
+      const [updated] = await db.update(schema.payments)
+        .set({ status })
+        .where(eq(schema.payments.id, req.params.id))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+
+      res.json(updated);
     } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
