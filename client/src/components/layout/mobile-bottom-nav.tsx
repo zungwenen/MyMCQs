@@ -5,11 +5,17 @@ import { Home, User, CreditCard, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import { HowToPayModal } from "./how-to-pay-modal";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function MobileBottomNav() {
   const [location] = useLocation();
   const { logout } = useAuthStore();
+  const isMobile = useIsMobile();
   const [showHowToPayModal, setShowHowToPayModal] = useState(false);
+
+  if (!isMobile) {
+    return null;
+  }
 
   const handleLogout = () => {
     logout();
@@ -45,7 +51,7 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border safe-area-inset-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border safe-area-inset-bottom">
         <div className="grid grid-cols-4 h-16">
           {navItems.map((item) => {
             const Icon = item.icon;
