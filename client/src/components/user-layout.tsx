@@ -83,54 +83,6 @@ const HowToPayModal = ({ open, onOpenChange }) => {
   );
 };
 
-// Mobile Bottom Navigation Component
-const MobileBottomNav = () => {
-  const [location] = useLocation();
-  const { user } = useAuthStore();
-  const [showHowToPayModal, setShowHowToPayModal] = useState(false);
-
-  const navItems = [
-    { href: "/", icon: Home, label: "Home" },
-    user && { href: "/profile", icon: User, label: "Profile" },
-    { href: "#how-to-pay", icon: CreditCard, label: "Payment", onClick: () => setShowHowToPayModal(true) },
-    user ? { href: "#logout", icon: LogOut, label: "Logout", onClick: () => { /* handle logout logic here or in parent */ } } :
-    { href: "/login", icon: LogIn, label: "Login", onClick: () => { /* handle login logic here or in parent */ } }
-  ].filter(Boolean); // Filter out undefined items if user is null
-
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t bg-background px-4 md:hidden">
-      {navItems.map((item) => (
-        item.onClick ? (
-          <Button
-            key={item.label}
-            variant="ghost"
-            size="sm"
-            className="flex flex-col items-center justify-center gap-1"
-            onClick={item.onClick}
-            data-testid={`nav-${item.label.toLowerCase()}`}
-          >
-            <item.icon className="h-5 w-5" />
-            <span className="text-xs">{item.label}</span>
-          </Button>
-        ) : (
-          <Link
-            key={item.label}
-            href={item.href}
-            className={cn(
-              "flex flex-col items-center justify-center gap-1 p-2 rounded-md",
-              location === item.href ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50"
-            )}
-          >
-            <item.icon className="h-5 w-5" />
-            <span className="text-xs">{item.label}</span>
-          </Link>
-        )
-      ))}
-      <HowToPayModal open={showHowToPayModal} onOpenChange={setShowHowToPayModal} />
-    </nav>
-  );
-};
-
 
 interface UserLayoutProps {
   children: React.ReactNode;
@@ -140,6 +92,7 @@ export function UserLayout({ children }: UserLayoutProps) {
   const [location] = useLocation();
   const { user, logout } = useAuthStore();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showHowToPayModal, setShowHowToPayModal] = useState(false); // State for the payment modal
   const isMobile = useIsMobile(); // Use the hook to determine if it's a mobile device
 
   const handleLogout = () => {
@@ -211,13 +164,26 @@ export function UserLayout({ children }: UserLayoutProps) {
               </Link>
             )}
 
+            {/* Payment Link in Header */}
+            <Button
+              variant={location.startsWith("/how-to-pay") ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setShowHowToPayModal(true)}
+              className="gap-2 hidden md:flex" // Display on desktop, handled by bottom nav on mobile
+              data-testid="nav-how-to-pay"
+            >
+              <CreditCard className="h-4 w-4" />
+              <span className="hidden md:inline">How to Pay</span>
+            </Button>
+
             <ThemeToggle />
             {authButton}
           </nav>
         </div>
       </header>
       <main className={cn(user && isMobile && "pb-16")}>{children}</main>
-      {user && <MobileBottomNav />}
+      {/* The MobileBottomNav component is removed as requested */}
+      <HowToPayModal open={showHowToPayModal} onOpenChange={setShowHowToPayModal} />
       <PhoneAuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
     </div>
   );
