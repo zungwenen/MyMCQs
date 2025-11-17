@@ -216,7 +216,7 @@ export function UserLayout({ children }: UserLayoutProps) {
           </nav>
         </div>
       </header>
-      <main className={cn(user && isMobile && "pb-16")}>{children}</main>
+      <main className={cn(user && "pb-16 md:pb-0")}>{children}</main>
       {user && <MobileBottomNav />}
       <PhoneAuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
     </div>
