@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* LIGHT MODE */
 :root {
   --button-outline: rgba(0,0,0, .10);
